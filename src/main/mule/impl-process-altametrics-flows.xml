@@ -112,8 +112,10 @@ output application/java
 payload]]></ee:set-variable>
 				</ee:variables>
 			</ee:transform>
-			<logger level="INFO" doc:name="Logger" doc:id="1700731d-b97f-4393-ae4e-9eb2343bb0ee" message='#["getting lookup data from redis for: " ++ vars.lookupKey]' />
-			<flow-ref doc:name="Get Lookup Data" doc:id="a214193e-a2f6-4a61-9cfa-a1852cbcc804" name="cache-positions-lookup-data-flow" target="lookupData" targetValue="#[payload]" />
+			<json-logger:logger-scope doc:name="Logger scope" doc:id="de15186a-1883-4736-a5fb-53ac1ea94fe2" configurationRef="JSON_Logger_Config">
+				<logger level="INFO" doc:name="Logger" doc:id="1700731d-b97f-4393-ae4e-9eb2343bb0ee" message='#["getting lookup data from redis for: " ++ vars.lookupKey]'/>
+				<flow-ref doc:name="Get Lookup Data" doc:id="a214193e-a2f6-4a61-9cfa-a1852cbcc804" name="cache-positions-lookup-data-flow" target="lookupData" targetValue="#[payload]" />
+			</json-logger:logger-scope>
 			<ee:transform doc:name="Add to Consolidated Response List" doc:id="c5d20f4a-beeb-4c4f-a3b1-257fea0b8555">
 				<ee:message>
 				</ee:message>
@@ -150,7 +152,7 @@ output application/json
 
 fun getId(item) = (item.teamMemberIdentifier default "" ++ item.siteId default "" ++ item.jobCode default "") 
 //fun company(obj) = (if (obj.r.company?) (obj.r.company) else (obj.'1'.brand default ''))
-fun generateBatchId(obj) = ((obj.l.brand) ++ '_' ++ ((obj.l.startDate) replace '-' with '') ++ '_' ++ ((obj.l.endDate) replace '-' with '') ++ '_' ++ ((obj.r.payGroup) default "default")) 
+fun generateBatchId(obj) = ((obj.l.brand) ++ '_' ++ ((obj.l.startDate) replace '-' with '') ++ '_' ++ ((obj.l.endDate) replace '-' with '') ++ '_' ++ ((obj.r.payGroup) default "")) 
 var joinData = leftJoin(payload,vars.lookupData, (l) -> getId(l), (r) -> r.altaMatch)
  --- 
  joinData map ((item, index) -> {
@@ -203,7 +205,7 @@ fun getId(item) = (
     item.teamMemberIdentifier default "" ++ "PrimaryStore" ++ item.jobCode default ""
 )
 //fun company(obj) = (if (obj.r.company?) (obj.r.company) else (obj.'1'.brand default ''))
-fun generateBatchId(obj) = (((obj[0].batchId splitBy '_')[0]) ++ '_' ++ ((obj.l.startDate) replace '-' with '') ++ '_' ++ ((obj.l.endDate) replace '-' with '') ++ '_' ++ ((obj.r.payGroup) default "default"))
+fun generateBatchId(obj) = ((obj.l.brand) ++ '_' ++ ((obj.l.startDate) replace '-' with '') ++ '_' ++ ((obj.l.endDate) replace '-' with '') ++ '_' ++ ((obj.r.payGroup) default ""))
 var joinData = leftJoin(payload,vars.lookupData, (l) -> getId(l), (r) -> r.standardPrimaryStoreAndJobMatch)
 
 ---
@@ -277,7 +279,7 @@ fun getId(item) = (
     item.teamMemberIdentifier default "" ++ "PrimaryJob"
 )
 //fun company(obj) = (if (obj.r.company?) (obj.r.company) else (obj.'1'.brand default ''))
-fun generateBatchId(obj) = (((obj[0].batchId splitBy '_')[0]) ++ '_' ++ ((obj.l.startDate) replace '-' with '') ++ '_' ++ ((obj.l.endDate) replace '-' with '') ++ '_' ++ ((obj.r.payGroup) default "default"))
+fun generateBatchId(obj) = ((obj.l.brand) ++ '_' ++ ((obj.l.startDate) replace '-' with '') ++ '_' ++ ((obj.l.endDate) replace '-' with '') ++ '_' ++ ((obj.r.payGroup) default ""))
 var joinData = leftJoin(payload,vars.lookupData, (l) -> getId(l), (r) -> r.standardPrimaryJobMatch)
 ---
 joinData map ((item, index) -> {

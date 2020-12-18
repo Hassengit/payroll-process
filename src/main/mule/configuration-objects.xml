@@ -14,7 +14,7 @@ http://www.mulesoft.org/schema/mule/workday http://www.mulesoft.org/schema/mule/
 http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
 http://www.mulesoft.org/schema/mule/redis http://www.mulesoft.org/schema/mule/redis/current/mule-redis.xsd">
 	<configuration-properties doc:name="Configuration properties" doc:id="156d704a-2977-4fa3-8112-dff5d0a8ad81" file="config/${env}-config.yaml" />
-	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="765f5191-a086-4132-905f-f704afcff734" file="config/${env}-secure-config.yaml" key="${secure.key}" >
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="765f5191-a086-4132-905f-f704afcff734" file="config/${env}-secure-config.yaml" key="muleinspirekey" >
 		<secure-properties:encrypt algorithm="Blowfish" />
 	</secure-properties:config>
 	<http:request-config name="HTTP_Payroll_Lookup_API_Request_Configuration" doc:name="HTTP Request configuration" doc:id="949bff2d-4b53-4004-af6a-4cfa8f9ed637" basePath="${secure::api.payroll.lookup.basePath}" >
@@ -38,7 +38,7 @@ http://www.mulesoft.org/schema/mule/redis http://www.mulesoft.org/schema/mule/re
 			</http:authentication>
 		</http:request-connection>
 	</http:request-config>
- 	<api-gateway:autodiscovery apiId="${secure::autodiscovery.payroll-system.api-id}" doc:name="API Autodiscovery" doc:id="96ff1737-c6f7-4645-9289-7d04f77f8ffb" flowRef="isb-payroll-process-api-main" />
+ 	<!-- <api-gateway:autodiscovery apiId="${secure::autodiscovery.payroll-system.api-id}" doc:name="API Autodiscovery" doc:id="96ff1737-c6f7-4645-9289-7d04f77f8ffb" flowRef="isb-payroll-process-api-main" /> -->
 	<sqs:config name="Amazon_SQS_Configuration" doc:name="Amazon SQS Configuration" doc:id="b44277e5-a059-4b9e-8800-11cbb73c56ae" >
 		<sqs:basic-connection testQueueArn="${secure::source.pos.sqs.queue_name}" accessKey="${secure::source.pos.sqs.accesskey}" secretKey="${secure::source.pos.sqs.secretkey}" region="${secure::source.pos.sqs.region}" />
 	</sqs:config>
@@ -74,5 +74,6 @@ http://www.mulesoft.org/schema/mule/redis http://www.mulesoft.org/schema/mule/re
 	<redis:redis-config name="Redus_Config_Menu" doc:name="Redis Redis" doc:id="4f240687-48ac-4e81-a6ac-92f7f36de6c1" >
 		<redis:clustered-connection clusterHosts="${secure::redis.clusters}" connectionTimeout="${secure::redis.connection.timeout}" maxTotal="${secure::redis.maxTotal}" maxIdle="${secure::redis.maxIdle}" minIdle="${secure::redis.minIdle}" maxWaitMillis="${secure::redis.maxWaitMillis}" minEvictableIdleTimeMillis="${secure::redis.minEvictableIdleTimeMillis}" softMinEvictableIdleTimeMillis="${secure::redis.softMinEvictableIdleTimeMillis}" numTestsPerEvictionRun="${secure::redis.numTestsPerEvictionRun}" timeBetweenEvictionRunsMillis="${secure::redis.timeBetweenEvictionRunsMillis}"/>
 	</redis:redis-config>
+	<global-property doc:name="Global Property" doc:id="e04315ab-a7ec-4658-a099-68cefe311627" name="env" value="local" />
 
 </mule>

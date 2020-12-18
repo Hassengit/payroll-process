@@ -1,7 +1,7 @@
 #---------- Redis positions Cache ------------
 redis:
-  clusters: "wrkdy-pre-prod.owvobp.clustercfg.use1.cache.amazonaws.com:6379"
-  #clusters: "redis-test.owvobp.clustercfg.use1.cache.amazonaws.com:6379"
+  #clusters: "wrkdy-pre-prod.owvobp.clustercfg.use1.cache.amazonaws.com:6379"
+  clusters: "redis-test.owvobp.clustercfg.use1.cache.amazonaws.com:6379"
   value.expiry.time: "30000"
   connection.timeout: "2000"
   entry.ttl: "30000"
@@ -24,7 +24,7 @@ redis:
 workday:
   username: "ISU_Mulesoft_API"
   password: "![p2G4sdZCLxLmZ+ygfPIrBIQfssLVjHz8]"
-  tenant: "inspirebrands4"
+  tenant: "inspirebrands_preview"
   hostname: "wd5-impl-services1.workday.com"
   timeout: "60000"
   version: "v34.1"
@@ -66,7 +66,7 @@ api:
     lookup:
       host: "wd5-impl-services1.workday.com"
       port: "443"
-      basePath: "/ccx/service/customreport2/inspirebrands4"
+      basePath: "/ccx/service/customreport2/inspirebrands_preview"
       positionProfilePath: "/ISU_INT5079/INT5079_-_Payroll_Input_Position_Lookup_Support_-_Minimal"
       companyProfilePath: "/ISU_INT5079/INT5079_-_IRB_Companies?format=json"
       jobProfilePath: "/ISU_INT5079/INT5079_-_POS_Job_Profile_Custom_Object_Data"

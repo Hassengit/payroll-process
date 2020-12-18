@@ -18,10 +18,11 @@ output application/java
 (vars.varChangeRecords distinctBy ($.teamMemberIdentifier)).teamMemberIdentifier]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="a48f42db-e4f8-4720-877a-e4d72df6d034" message="DistinctEmployees: #[vars.varDistinctEmployees]"/>
 		<logger level="INFO" doc:name="Solver CR Logger" doc:id="b3eaf967-7ace-4de2-b625-0d32e07aeec7" category="${logger.category}" message='Async processing for solver change records: #[vars.varDistinctEmployees]'/>
-		<async doc:name="Async" doc:id="d009cac5-0462-48ec-b21a-64e27dd26398" >
+		  <!-- <async doc:name="Async" doc:id="d009cac5-0462-48ec-b21a-64e27dd26398" > --> 
 			<flow-ref doc:name="Submit data to Workday" doc:id="378a83a7-f052-4f80-9254-3de33f62f8c9" name="sf-post-solver-to-workday-system-flow"/>
-		</async>
+		  <!-- </async> -->  
 		<ee:transform doc:name="Transform Message" doc:id="9a30f896-089c-4dbc-872e-38d997fc05d5" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
@@ -175,7 +176,7 @@ vars.varConsolidatedChangesRequest default [] ++ deductionData default [] ++ ear
 		</foreach>
 		<logger level="INFO" doc:name="Solver Async End" doc:id="c4f8bdd4-dd01-4485-a449-5948cab490b5" message="Completed creating Workday payroll request: #[flatten(vars.varConsolidatedChangesRequest)]" category="${logger.category}"/>
 		
-		<foreach doc:name="For Each" doc:id="23d23a16-9664-4cbe-90ba-d12dc192c22f" batchSize="10000" collection="#[flatten(vars.varConsolidatedChangesRequest)]">
+		<foreach doc:name="For Each" doc:id="23d23a16-9664-4cbe-90ba-d12dc192c22f" batchSize="1000" collection="#[flatten(vars.varConsolidatedChangesRequest)]">
 			<http:request method="POST" doc:name="POST Payroll Data to Workday" doc:id="b6948098-c325-4069-826f-f69018342867" config-ref="HTTP_Payroll_Workday_POST_Request_Configuration" path="${secure::target.workday.https.path}" outputMimeType="application/json" responseTimeout="${util.timeout.intervalInMS}" target="wsResponse">
 				<http:body ><![CDATA[#[output application/json
 ---

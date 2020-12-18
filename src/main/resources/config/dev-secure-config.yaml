@@ -1,6 +1,6 @@
 #---------- Redis positions Cache ------------
 redis:
-  clusters: "wrkdy-pre-prod.owvobp.clustercfg.use1.cache.amazonaws.com:6379"
+  clusters: "redis-test.owvobp.clustercfg.use1.cache.amazonaws.com:6379"
   #clusters: "redis-test.owvobp.clustercfg.use1.cache.amazonaws.com:6379"
   value.expiry.time: "30000"
   connection.timeout: "2000"

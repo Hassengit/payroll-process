@@ -69,7 +69,7 @@ payload.Report_Entry filter (not (isEmpty($.Cost_Center))) map {
 	</sub-flow>
 	<flow name="cache-positions-lookup-data-flow" doc:id="d0d80a91-a143-44ae-b0a1-cdb242dad4e5" >
 <!-- 		<json-logger:logger-scope doc:name="Logger scope" doc:id="1ea24656-1fa9-45f6-bd66-cd0eb711df7d" configurationRef="JSON_Logger_Config"> -->
-			<logger level="INFO" doc:name="Logger" doc:id="ff740f37-0491-4a4d-b55e-f6f3f996e0b5" message="#[&quot;before calling redis to get &quot; ++ p('env') ++ &quot;_wrkdy_position_&quot; ++ vars.lookupKey ++ ' company']"/>
+			<logger level="INFO" doc:name="Logger" doc:id="ff740f37-0491-4a4d-b55e-f6f3f996e0b5" message='#["before calling redis to get " ++ "position_" ++ vars.lookupKey]'/>
 			<redis:get doc:name="Get" doc:id="b84398d9-83b8-431d-9063-096b27beb2bc" key="#[p('env') ++ &quot;_wrkdy_position_&quot; ++ vars.lookupKey]" config-ref="Redus_Config_Menu"/>
 <!-- 		<crypto:pgp-decrypt doc:name="Decrypt Lookup Data" doc:id="2f472eba-7792-4fad-ab5b-7df25fa6d9b6" config-ref="PositionsData_Crypto_Pgp" outputMimeType="application/json"> -->
 <!-- 			<crypto:content><![CDATA[#[vars.lookupResponse]]]></crypto:content> -->
