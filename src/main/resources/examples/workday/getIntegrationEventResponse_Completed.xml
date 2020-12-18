@@ -1,0 +1,360 @@
+<wd:Get_Integration_Events_Response xmlns:wd="urn:com.workday/bsvc" wd:version="v34.0">
+    <wd:Request_References>
+        <wd:Integration_Event_Reference>
+            <wd:ID wd:type="WID">2566fb6878f001820c294ec0ba4aaa5a</wd:ID>
+            <wd:ID wd:type="Background_Process_Instance_ID">INTEGRATION_ENTERPRISE_EVENT-6-4516</wd:ID>
+        </wd:Integration_Event_Reference>
+    </wd:Request_References>
+    <wd:Response_Results>
+        <wd:Total_Results>1</wd:Total_Results>
+        <wd:Total_Pages>1</wd:Total_Pages>
+        <wd:Page_Results>1</wd:Page_Results>
+        <wd:Page>1</wd:Page>
+    </wd:Response_Results>
+    <wd:Response_Data>
+        <wd:Integration_Event>
+            <wd:Integration_Event_Reference>
+                <wd:ID wd:type="WID">2566fb6878f001820c294ec0ba4aaa5a</wd:ID>
+                <wd:ID wd:type="Background_Process_Instance_ID">INTEGRATION_ENTERPRISE_EVENT-6-4516</wd:ID>
+            </wd:Integration_Event_Reference>
+            <wd:Integration_Event_Data>
+                <wd:Integration_System_Reference>
+                    <wd:ID wd:type="WID">d02a40754da00196750bd69b5f1fdc70</wd:ID>
+                    <wd:ID wd:type="Integration_System_ID">INTEGRATION_SYSTEM__AUDITED_-3-237</wd:ID>
+                </wd:Integration_System_Reference>
+                <wd:Process_Description>INT5019 Payroll Position Support File Based</wd:Process_Description>
+                <wd:Initiated_DateTime>2020-05-21T06:30:52.926-07:00</wd:Initiated_DateTime>
+                <wd:Integration_Response_Message>Interface completed successfully!</wd:Integration_Response_Message>
+                <wd:Completed_DateTime>2020-05-21T06:39:35.059-07:00</wd:Completed_DateTime>
+                <wd:Initiated_By_System_Account_Reference>
+                    <wd:ID wd:type="WID">9c6fc9bce068014fd4341d407908bdc4</wd:ID>
+                    <wd:ID wd:type="System_User_ID">ISU_Mulesoft_API</wd:ID>
+                    <wd:ID wd:type="WorkdayUserName">ISU_Mulesoft_API</wd:ID>
+                </wd:Initiated_By_System_Account_Reference>
+                <wd:Percent_Complete>1</wd:Percent_Complete>
+                <wd:Integration_Runtime_Parameter_Data>
+                    <wd:Launch_Configurable_Name>INTEGRATION_FILE_UTILITY-6-34 (1)</wd:Launch_Configurable_Name>
+                    <wd:Parameter_Name wd:Label="File Name">Text</wd:Parameter_Name>
+                    <wd:Text>INT5069_Payroll_Positions_20200521063052.txt.pgp</wd:Text>
+                </wd:Integration_Runtime_Parameter_Data>
+                <wd:Integration_Runtime_Parameter_Data>
+                    <wd:Launch_Configurable_Name>INTEGRATION_FILE_UTILITY-6-34 (1)</wd:Launch_Configurable_Name>
+                    <wd:Parameter_Name wd:Label="Document Retention Policy">Numeric</wd:Parameter_Name>
+                </wd:Integration_Runtime_Parameter_Data>
+                <wd:Integration_Runtime_Parameter_Data>
+                    <wd:Launch_Configurable_Name>SFTP_TRANSPORT_PROTOCOL-6-140</wd:Launch_Configurable_Name>
+                    <wd:Parameter_Name wd:Label="Use Temp File">Boolean</wd:Parameter_Name>
+                    <wd:Boolean>0</wd:Boolean>
+                </wd:Integration_Runtime_Parameter_Data>
+                <wd:Integration_Runtime_Parameter_Data>
+                    <wd:Launch_Configurable_Name>SFTP_TRANSPORT_PROTOCOL-6-140</wd:Launch_Configurable_Name>
+                    <wd:Parameter_Name wd:Label="Address">Text</wd:Parameter_Name>
+                </wd:Integration_Runtime_Parameter_Data>
+                <wd:Integration_Runtime_Parameter_Data>
+                    <wd:Launch_Configurable_Name>SFTP_TRANSPORT_PROTOCOL-6-140</wd:Launch_Configurable_Name>
+                    <wd:Parameter_Name wd:Label="Directory">Text</wd:Parameter_Name>
+                </wd:Integration_Runtime_Parameter_Data>
+                <wd:Integration_Enterprise_Event_Records_Data>
+                    <wd:Total_Records>0</wd:Total_Records>
+                    <wd:Total_Records_Uploaded>0</wd:Total_Records_Uploaded>
+                    <wd:Total_Failed_Records>0</wd:Total_Failed_Records>
+                </wd:Integration_Enterprise_Event_Records_Data>
+            </wd:Integration_Event_Data>
+            <wd:Background_Process_Instance_Data>
+                <wd:Background_Process_Instance_Status_Reference>
+                    <wd:ID wd:type="WID">d8b0bcd8446c11de98360015c5e6daf6</wd:ID>
+                    <wd:ID wd:type="Background_Process_Instance_Status_ID">Completed</wd:ID>
+                </wd:Background_Process_Instance_Status_Reference>
+                <wd:Parent_Event_Reference>
+                    <wd:ID wd:type="WID">2566fb6878f00119025954c0ba4ab15a</wd:ID>
+                </wd:Parent_Event_Reference>
+                <wd:Background_Process_Message_Data>
+                    <wd:Timestamp>2020-05-21T06:38:52.862-07:00</wd:Timestamp>
+                    <wd:Severity_Level_Reference>
+                        <wd:ID wd:type="WID">dc0f8382446c11de98360015c5e6daf6</wd:ID>
+                        <wd:ID wd:type="Message_Severity_Level">INFO</wd:ID>
+                    </wd:Severity_Level_Reference>
+                    <wd:Message_Summary>The data source size for this EIB is 105 MB</wd:Message_Summary>
+                </wd:Background_Process_Message_Data>
+                <wd:Background_Process_Message_Data>
+                    <wd:Timestamp>2020-05-21T06:39:10.157-07:00</wd:Timestamp>
+                    <wd:Severity_Level_Reference>
+                        <wd:ID wd:type="WID">dc0f8382446c11de98360015c5e6daf6</wd:ID>
+                        <wd:ID wd:type="Message_Severity_Level">INFO</wd:ID>
+                    </wd:Severity_Level_Reference>
+                    <wd:Message_Summary>EIB Output Document now available</wd:Message_Summary>
+                    <wd:Message_Detail>Output document is attached to Integration Event. This is the file that is sent to the Transport Protocol.</wd:Message_Detail>
+                </wd:Background_Process_Message_Data>
+                <wd:Background_Process_Message_Data>
+                    <wd:Timestamp>2020-05-21T06:39:15.338-07:00</wd:Timestamp>
+                    <wd:Severity_Level_Reference>
+                        <wd:ID wd:type="WID">dc0f8382446c11de98360015c5e6daf6</wd:ID>
+                        <wd:ID wd:type="Message_Severity_Level">INFO</wd:ID>
+                    </wd:Severity_Level_Reference>
+                    <wd:Message_Summary>Launch Request, Log files and Consolidated Report.</wd:Message_Summary>
+                </wd:Background_Process_Message_Data>
+                <wd:Background_Process_Message_Data>
+                    <wd:Timestamp>2020-05-21T06:39:33.529-07:00</wd:Timestamp>
+                    <wd:Severity_Level_Reference>
+                        <wd:ID wd:type="WID">dc0f8382446c11de98360015c5e6daf6</wd:ID>
+                        <wd:ID wd:type="Message_Severity_Level">INFO</wd:ID>
+                    </wd:Severity_Level_Reference>
+                    <wd:Message_Summary>Successfully delivered document 'INT5069_Payroll_Positions_20200521063052.txt.pgp' to endpoint 'sftp://mft.inspirebrands.com/mulesoft_cloud/positions/dev'.</wd:Message_Summary>
+                </wd:Background_Process_Message_Data>
+                <wd:Background_Process_Message_Data>
+                    <wd:Timestamp>2020-05-21T06:39:34.926-07:00</wd:Timestamp>
+                    <wd:Severity_Level_Reference>
+                        <wd:ID wd:type="WID">dc0f8382446c11de98360015c5e6daf6</wd:ID>
+                        <wd:ID wd:type="Message_Severity_Level">INFO</wd:ID>
+                    </wd:Severity_Level_Reference>
+                    <wd:Message_Summary>Launch Request, Log files and Consolidated Report.</wd:Message_Summary>
+                </wd:Background_Process_Message_Data>
+                <wd:Output_Document_Data>
+                    <wd:Integration_Repository_Document_Reference>
+                        <wd:ID wd:type="WID">2566fb6878f001c311f20f34bb4ac55a</wd:ID>
+                        <wd:ID wd:type="Document_ID">EnterpriseInterfaceBuilder/6a18551a-1d74-4d7b-1a39-36253e14442b</wd:ID>
+                    </wd:Integration_Repository_Document_Reference>
+                    <wd:Integration_Repository_Document_Data wd:Document_ID="EnterpriseInterfaceBuilder/6a18551a-1d74-4d7b-1a39-36253e14442b" wd:File_Name="INT5069_Payroll_Positions_20200521063052.txt.pgp">
+                        <wd:File_Size>110255102</wd:File_Size>
+                        <wd:Content_Type_Reference>
+                            <wd:ID wd:type="WID">d969a07a5d4410000f3d5750e4dd001c</wd:ID>
+                            <wd:ID wd:type="Content_Type_ID">application/json</wd:ID>
+                        </wd:Content_Type_Reference>
+                        <wd:Document_Type_Reference>
+                            <wd:ID wd:type="WID">dc72b65a446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Document_Type_ID">TXT</wd:ID>
+                        </wd:Document_Type_Reference>
+                        <wd:Expiration_Timestamp>2020-11-17T05:38:58.000-08:00</wd:Expiration_Timestamp>
+                        <wd:Owner_Reference>
+                            <wd:ID wd:type="WID">9c6fc9bce068014fd4341d407908bdc4</wd:ID>
+                            <wd:ID wd:type="System_User_ID">ISU_Mulesoft_API</wd:ID>
+                            <wd:ID wd:type="WorkdayUserName">ISU_Mulesoft_API</wd:ID>
+                        </wd:Owner_Reference>
+                        <wd:Document_Tag_Reference>
+                            <wd:ID wd:type="WID">df3520a3ef69432bbd9f48ed808dbd18</wd:ID>
+                            <wd:ID wd:type="Workday_Document_Tag_Name">Deliverable</wd:ID>
+                        </wd:Document_Tag_Reference>
+                        <wd:Document_Tag_Reference>
+                            <wd:ID wd:type="WID">38a826f5c471011644e7d25a0002aa67</wd:ID>
+                            <wd:ID wd:type="Document_Tag_Name">Output document</wd:ID>
+                        </wd:Document_Tag_Reference>
+                        <wd:Custom_Document_Tag>Output document</wd:Custom_Document_Tag>
+                    </wd:Integration_Repository_Document_Data>
+                </wd:Output_Document_Data>
+                <wd:Output_Document_Data>
+                    <wd:Integration_Repository_Document_Reference>
+                        <wd:ID wd:type="WID">2566fb6878f001e7509cd539bb4af85a</wd:ID>
+                        <wd:ID wd:type="Document_ID">consolidated-reports/2e6e0121-634d-4a61-302b-3b2e7f4a5f60</wd:ID>
+                    </wd:Integration_Repository_Document_Reference>
+                    <wd:Integration_Repository_Document_Data wd:Document_ID="consolidated-reports/2e6e0121-634d-4a61-302b-3b2e7f4a5f60" wd:File_Name="consolidated-report-39fa1ec71e16014e93ab098fa8012c08.xml">
+                        <wd:File_Size>45291</wd:File_Size>
+                        <wd:Content_Type_Reference>
+                            <wd:ID wd:type="WID">d9ae655e446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Content_Type_ID">text/xml</wd:ID>
+                        </wd:Content_Type_Reference>
+                        <wd:Document_Type_Reference>
+                            <wd:ID wd:type="WID">dc72b740446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Document_Type_ID">XML</wd:ID>
+                        </wd:Document_Type_Reference>
+                        <wd:Expiration_Timestamp>2020-07-20T06:39:34.000-07:00</wd:Expiration_Timestamp>
+                        <wd:Owner_Reference>
+                            <wd:ID wd:type="WID">9c6fc9bce068014fd4341d407908bdc4</wd:ID>
+                            <wd:ID wd:type="System_User_ID">ISU_Mulesoft_API</wd:ID>
+                            <wd:ID wd:type="WorkdayUserName">ISU_Mulesoft_API</wd:ID>
+                        </wd:Owner_Reference>
+                        <wd:Document_Tag_Reference>
+                            <wd:ID wd:type="WID">5bad0774e8f84fe88af10efd70999de3</wd:ID>
+                            <wd:ID wd:type="Workday_Document_Tag_Name">Consolidated Report</wd:ID>
+                        </wd:Document_Tag_Reference>
+                    </wd:Integration_Repository_Document_Data>
+                </wd:Output_Document_Data>
+                <wd:Output_Document_Data>
+                    <wd:Integration_Repository_Document_Reference>
+                        <wd:ID wd:type="WID">2566fb6878f001e2ff43d439bb4af65a</wd:ID>
+                        <wd:ID wd:type="Document_ID">39fa1ec71e16014e93ab098fa8012c08/4c210f54-301e-4808-2a1a-0f070b2b5d12</wd:ID>
+                    </wd:Integration_Repository_Document_Reference>
+                    <wd:Integration_Repository_Document_Data wd:Document_ID="39fa1ec71e16014e93ab098fa8012c08/4c210f54-301e-4808-2a1a-0f070b2b5d12" wd:File_Name="request-39fa1ec71e16014e93ab098fa8012c08.log">
+                        <wd:File_Size>4662</wd:File_Size>
+                        <wd:Content_Type_Reference>
+                            <wd:ID wd:type="WID">d9ae655e446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Content_Type_ID">text/xml</wd:ID>
+                        </wd:Content_Type_Reference>
+                        <wd:Document_Type_Reference>
+                            <wd:ID wd:type="WID">dc72b740446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Document_Type_ID">XML</wd:ID>
+                        </wd:Document_Type_Reference>
+                        <wd:Expiration_Timestamp>2020-07-20T06:39:33.000-07:00</wd:Expiration_Timestamp>
+                        <wd:Owner_Reference>
+                            <wd:ID wd:type="WID">9c6fc9bce068014fd4341d407908bdc4</wd:ID>
+                            <wd:ID wd:type="System_User_ID">ISU_Mulesoft_API</wd:ID>
+                            <wd:ID wd:type="WorkdayUserName">ISU_Mulesoft_API</wd:ID>
+                        </wd:Owner_Reference>
+                        <wd:Document_Tag_Reference>
+                            <wd:ID wd:type="WID">2bea9621794710001a97acff14700001</wd:ID>
+                            <wd:ID wd:type="Workday_Document_Tag_Name">Cloud Request</wd:ID>
+                        </wd:Document_Tag_Reference>
+                    </wd:Integration_Repository_Document_Data>
+                </wd:Output_Document_Data>
+                <wd:Output_Document_Data>
+                    <wd:Integration_Repository_Document_Reference>
+                        <wd:ID wd:type="WID">2566fb6878f001d71c95d439bb4af75a</wd:ID>
+                        <wd:ID wd:type="Document_ID">39fa1ec71e16014e93ab098fa8012c08/71182142-2c7a-4f2f-340d-6b5b0670401e</wd:ID>
+                    </wd:Integration_Repository_Document_Reference>
+                    <wd:Integration_Repository_Document_Data wd:Document_ID="39fa1ec71e16014e93ab098fa8012c08/71182142-2c7a-4f2f-340d-6b5b0670401e" wd:File_Name="server-39fa1ec71e16014e93ab098fa8012c08.log">
+                        <wd:File_Size>9426</wd:File_Size>
+                        <wd:Content_Type_Reference>
+                            <wd:ID wd:type="WID">d9ae6950446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Content_Type_ID">text/plain</wd:ID>
+                        </wd:Content_Type_Reference>
+                        <wd:Document_Type_Reference>
+                            <wd:ID wd:type="WID">dc72b65a446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Document_Type_ID">TXT</wd:ID>
+                        </wd:Document_Type_Reference>
+                        <wd:Expiration_Timestamp>2020-07-20T06:39:33.000-07:00</wd:Expiration_Timestamp>
+                        <wd:Owner_Reference>
+                            <wd:ID wd:type="WID">9c6fc9bce068014fd4341d407908bdc4</wd:ID>
+                            <wd:ID wd:type="System_User_ID">ISU_Mulesoft_API</wd:ID>
+                            <wd:ID wd:type="WorkdayUserName">ISU_Mulesoft_API</wd:ID>
+                        </wd:Owner_Reference>
+                        <wd:Document_Tag_Reference>
+                            <wd:ID wd:type="WID">2bea9621794710001a97ac67aea00000</wd:ID>
+                            <wd:ID wd:type="Workday_Document_Tag_Name">Log File</wd:ID>
+                        </wd:Document_Tag_Reference>
+                    </wd:Integration_Repository_Document_Data>
+                </wd:Output_Document_Data>
+                <wd:Output_Document_Data>
+                    <wd:Integration_Repository_Document_Reference>
+                        <wd:ID wd:type="WID">2566fb6878f0013ad1a14735bb4ade5a</wd:ID>
+                        <wd:ID wd:type="Document_ID">consolidated-reports/7e1f5f7c-5a64-4663-3b4f-754103461518</wd:ID>
+                    </wd:Integration_Repository_Document_Reference>
+                    <wd:Integration_Repository_Document_Data wd:Document_ID="consolidated-reports/7e1f5f7c-5a64-4663-3b4f-754103461518" wd:File_Name="consolidated-report-0cc3f346221401155d61a839a801de0b.xml">
+                        <wd:File_Size>27197</wd:File_Size>
+                        <wd:Content_Type_Reference>
+                            <wd:ID wd:type="WID">d9ae655e446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Content_Type_ID">text/xml</wd:ID>
+                        </wd:Content_Type_Reference>
+                        <wd:Document_Type_Reference>
+                            <wd:ID wd:type="WID">dc72b740446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Document_Type_ID">XML</wd:ID>
+                        </wd:Document_Type_Reference>
+                        <wd:Expiration_Timestamp>2020-07-20T06:39:15.000-07:00</wd:Expiration_Timestamp>
+                        <wd:Owner_Reference>
+                            <wd:ID wd:type="WID">9c6fc9bce068014fd4341d407908bdc4</wd:ID>
+                            <wd:ID wd:type="System_User_ID">ISU_Mulesoft_API</wd:ID>
+                            <wd:ID wd:type="WorkdayUserName">ISU_Mulesoft_API</wd:ID>
+                        </wd:Owner_Reference>
+                        <wd:Document_Tag_Reference>
+                            <wd:ID wd:type="WID">5bad0774e8f84fe88af10efd70999de3</wd:ID>
+                            <wd:ID wd:type="Workday_Document_Tag_Name">Consolidated Report</wd:ID>
+                        </wd:Document_Tag_Reference>
+                    </wd:Integration_Repository_Document_Data>
+                </wd:Output_Document_Data>
+                <wd:Output_Document_Data>
+                    <wd:Integration_Repository_Document_Reference>
+                        <wd:ID wd:type="WID">2566fb6878f001e33f154535bb4adb5a</wd:ID>
+                        <wd:ID wd:type="Document_ID">0cc3f346221401155d61a839a801de0b/63343215-4d74-4000-2678-330959244178</wd:ID>
+                    </wd:Integration_Repository_Document_Reference>
+                    <wd:Integration_Repository_Document_Data wd:Document_ID="0cc3f346221401155d61a839a801de0b/63343215-4d74-4000-2678-330959244178" wd:File_Name="request-0cc3f346221401155d61a839a801de0b.log">
+                        <wd:File_Size>4040</wd:File_Size>
+                        <wd:Content_Type_Reference>
+                            <wd:ID wd:type="WID">d9ae655e446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Content_Type_ID">text/xml</wd:ID>
+                        </wd:Content_Type_Reference>
+                        <wd:Document_Type_Reference>
+                            <wd:ID wd:type="WID">dc72b740446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Document_Type_ID">XML</wd:ID>
+                        </wd:Document_Type_Reference>
+                        <wd:Expiration_Timestamp>2020-07-20T06:39:14.000-07:00</wd:Expiration_Timestamp>
+                        <wd:Owner_Reference>
+                            <wd:ID wd:type="WID">9c6fc9bce068014fd4341d407908bdc4</wd:ID>
+                            <wd:ID wd:type="System_User_ID">ISU_Mulesoft_API</wd:ID>
+                            <wd:ID wd:type="WorkdayUserName">ISU_Mulesoft_API</wd:ID>
+                        </wd:Owner_Reference>
+                        <wd:Document_Tag_Reference>
+                            <wd:ID wd:type="WID">2bea9621794710001a97acff14700001</wd:ID>
+                            <wd:ID wd:type="Workday_Document_Tag_Name">Cloud Request</wd:ID>
+                        </wd:Document_Tag_Reference>
+                    </wd:Integration_Repository_Document_Data>
+                </wd:Output_Document_Data>
+                <wd:Output_Document_Data>
+                    <wd:Integration_Repository_Document_Reference>
+                        <wd:ID wd:type="WID">2566fb6878f0016883e44535bb4adc5a</wd:ID>
+                        <wd:ID wd:type="Document_ID">0cc3f346221401155d61a839a801de0b/43103f50-714a-4834-3221-652944517169</wd:ID>
+                    </wd:Integration_Repository_Document_Reference>
+                    <wd:Integration_Repository_Document_Data wd:Document_ID="0cc3f346221401155d61a839a801de0b/43103f50-714a-4834-3221-652944517169" wd:File_Name="server-0cc3f346221401155d61a839a801de0b.log">
+                        <wd:File_Size>47801</wd:File_Size>
+                        <wd:Content_Type_Reference>
+                            <wd:ID wd:type="WID">d9ae6950446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Content_Type_ID">text/plain</wd:ID>
+                        </wd:Content_Type_Reference>
+                        <wd:Document_Type_Reference>
+                            <wd:ID wd:type="WID">dc72b65a446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Document_Type_ID">TXT</wd:ID>
+                        </wd:Document_Type_Reference>
+                        <wd:Expiration_Timestamp>2020-07-20T06:39:14.000-07:00</wd:Expiration_Timestamp>
+                        <wd:Owner_Reference>
+                            <wd:ID wd:type="WID">9c6fc9bce068014fd4341d407908bdc4</wd:ID>
+                            <wd:ID wd:type="System_User_ID">ISU_Mulesoft_API</wd:ID>
+                            <wd:ID wd:type="WorkdayUserName">ISU_Mulesoft_API</wd:ID>
+                        </wd:Owner_Reference>
+                        <wd:Document_Tag_Reference>
+                            <wd:ID wd:type="WID">2bea9621794710001a97ac67aea00000</wd:ID>
+                            <wd:ID wd:type="Workday_Document_Tag_Name">Log File</wd:ID>
+                        </wd:Document_Tag_Reference>
+                    </wd:Integration_Repository_Document_Data>
+                </wd:Output_Document_Data>
+                <wd:Output_Document_Data>
+                    <wd:Integration_Repository_Document_Reference>
+                        <wd:ID wd:type="WID">2566fb6878f001b00eb44635bb4add5a</wd:ID>
+                        <wd:ID wd:type="Document_ID">0cc3f346221401155d61a839a801de0b/3e25244e-5115-431b-1d6f-3460762c6a32</wd:ID>
+                    </wd:Integration_Repository_Document_Reference>
+                    <wd:Integration_Repository_Document_Data wd:Document_ID="0cc3f346221401155d61a839a801de0b/3e25244e-5115-431b-1d6f-3460762c6a32" wd:File_Name="profile-0cc3f346221401155d61a839a801de0b.log">
+                        <wd:File_Size>8689</wd:File_Size>
+                        <wd:Content_Type_Reference>
+                            <wd:ID wd:type="WID">d9ae6950446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Content_Type_ID">text/plain</wd:ID>
+                        </wd:Content_Type_Reference>
+                        <wd:Document_Type_Reference>
+                            <wd:ID wd:type="WID">dc72b65a446c11de98360015c5e6daf6</wd:ID>
+                            <wd:ID wd:type="Document_Type_ID">TXT</wd:ID>
+                        </wd:Document_Type_Reference>
+                        <wd:Expiration_Timestamp>2020-07-20T06:39:14.000-07:00</wd:Expiration_Timestamp>
+                        <wd:Owner_Reference>
+                            <wd:ID wd:type="WID">9c6fc9bce068014fd4341d407908bdc4</wd:ID>
+                            <wd:ID wd:type="System_User_ID">ISU_Mulesoft_API</wd:ID>
+                            <wd:ID wd:type="WorkdayUserName">ISU_Mulesoft_API</wd:ID>
+                        </wd:Owner_Reference>
+                        <wd:Document_Tag_Reference>
+                            <wd:ID wd:type="WID">2bea9621794710001a97ac67aea00000</wd:ID>
+                            <wd:ID wd:type="Workday_Document_Tag_Name">Log File</wd:ID>
+                        </wd:Document_Tag_Reference>
+                    </wd:Integration_Repository_Document_Data>
+                </wd:Output_Document_Data>
+                <wd:Consolidated_Report_Reference>
+                    <wd:ID wd:type="WID">2566fb6878f001e7509cd539bb4af85a</wd:ID>
+                    <wd:ID wd:type="Document_ID">consolidated-reports/2e6e0121-634d-4a61-302b-3b2e7f4a5f60</wd:ID>
+                </wd:Consolidated_Report_Reference>
+                <wd:Log_File_Reference>
+                    <wd:ID wd:type="WID">2566fb6878f001d71c95d439bb4af75a</wd:ID>
+                    <wd:ID wd:type="Document_ID">39fa1ec71e16014e93ab098fa8012c08/71182142-2c7a-4f2f-340d-6b5b0670401e</wd:ID>
+                </wd:Log_File_Reference>
+                <wd:Log_File_Reference>
+                    <wd:ID wd:type="WID">2566fb6878f001e2ff43d439bb4af65a</wd:ID>
+                    <wd:ID wd:type="Document_ID">39fa1ec71e16014e93ab098fa8012c08/4c210f54-301e-4808-2a1a-0f070b2b5d12</wd:ID>
+                </wd:Log_File_Reference>
+                <wd:Log_File_Reference>
+                    <wd:ID wd:type="WID">2566fb6878f001b00eb44635bb4add5a</wd:ID>
+                    <wd:ID wd:type="Document_ID">0cc3f346221401155d61a839a801de0b/3e25244e-5115-431b-1d6f-3460762c6a32</wd:ID>
+                </wd:Log_File_Reference>
+                <wd:Log_File_Reference>
+                    <wd:ID wd:type="WID">2566fb6878f0016883e44535bb4adc5a</wd:ID>
+                    <wd:ID wd:type="Document_ID">0cc3f346221401155d61a839a801de0b/43103f50-714a-4834-3221-652944517169</wd:ID>
+                </wd:Log_File_Reference>
+                <wd:Log_File_Reference>
+                    <wd:ID wd:type="WID">2566fb6878f001e33f154535bb4adb5a</wd:ID>
+                    <wd:ID wd:type="Document_ID">0cc3f346221401155d61a839a801de0b/63343215-4d74-4000-2678-330959244178</wd:ID>
+                </wd:Log_File_Reference>
+            </wd:Background_Process_Instance_Data>
+        </wd:Integration_Event>
+    </wd:Response_Data>
+</wd:Get_Integration_Events_Response>

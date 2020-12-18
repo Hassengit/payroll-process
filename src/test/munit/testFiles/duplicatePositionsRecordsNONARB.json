@@ -1,0 +1,68 @@
+{
+	"Report_Entry": [
+		{
+			"Worker_Location": "RTO_0697",
+			"All_Positions___Jobs_group": [
+				{
+					"Company_WID": "c322030c5b520186f11fedfc2311b373",
+					"Company": "RTCO USA Rusty Taco",
+					"Location_Code": "RTO_0697",
+					"Pay_Rate_Type": "Hourly",
+					"POS_Job_Code": "12214",
+					"Primary_Job": "1",
+					"Company_-_ID": "RTCO USA",
+					"Position_ID": "P-100012641",
+					"RTI_Department_Number": "4",
+					"Company_Ref_ID": "RTACO_USA_Company",
+					"Job_Code": "50094"
+				}
+			],
+			"Team_Member_ID": "100311038"
+		},
+		{
+			"Worker_Location": "RTO_0697",
+			"All_Positions___Jobs_group": [
+				{
+					"Company_WID": "c322030c5b520186f11fedfc2311b373",
+					"Company": "RTCO USA Rusty Taco",
+					"Location_Code": "RTO_0697",
+					"Pay_Rate_Type": "Hourly",
+					"POS_Job_Code": "11138",
+					"Primary_Job": "1",
+					"Company_-_ID": "RTCO USA",
+					"Position_ID": "P100297891",
+					"RTI_Department_Number": "4",
+					"Company_Ref_ID": "RTACO_USA_Company",
+					"Job_Code": "50014"
+				},
+				{
+					"Company_WID": "c322030c5b520186f11fedfc2311b373",
+					"Company": "RTCO USA Rusty Taco",
+					"Location_Code": "RTO_0697",
+					"Pay_Rate_Type": "Hourly",
+					"POS_Job_Code": "11137",
+					"Primary_Job": "0",
+					"Company_-_ID": "RTCO USA",
+					"Position_ID": "P10029789111137",
+					"RTI_Department_Number": "3",
+					"Company_Ref_ID": "RTACO_USA_Company",
+					"Job_Code": "50055"
+				},
+				{
+					"Company_WID": "c322030c5b520186f11fedfc2311b373",
+					"Company": "RTCO USA Rusty Taco",
+					"Location_Code": "RTO_0697",
+					"Pay_Rate_Type": "Hourly",
+					"POS_Job_Code": "11137",
+					"Primary_Job": "0",
+					"Company_-_ID": "RTCO USA",
+					"Position_ID": "P10029789111137",
+					"RTI_Department_Number": "1",
+					"Company_Ref_ID": "RTACO_USA_Company",
+					"Job_Code": "50055"
+				}
+			],
+			"Team_Member_ID": "100297891"
+		}
+	]
+}

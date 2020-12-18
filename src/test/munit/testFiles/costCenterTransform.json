@@ -1,0 +1,34 @@
+[
+	{
+		"storeCode": "SDI_1014",
+		"costCenter": "16001014"
+	},
+	{
+		"storeCode": "SDI_1021",
+		"costCenter": "16001021"
+	},
+	{
+		"storeCode": "ARB_05632",
+		"costCenter": "11005632"
+	},
+	{
+		"storeCode": "ARB_07392",
+		"costCenter": "11007392"
+	},
+	{
+		"storeCode": "BWW_0761",
+		"costCenter": "31000761"
+	},
+	{
+		"storeCode": "BWW_0762",
+		"costCenter": "31000762"
+	},
+	{
+		"storeCode": "RTO_0536",
+		"costCenter": "32000536"
+	},
+	{
+		"storeCode": "RTO_0661",
+		"costCenter": "32000661"
+	}
+]

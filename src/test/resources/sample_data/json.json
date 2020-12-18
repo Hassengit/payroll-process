@@ -1,0 +1,130 @@
+{
+"Report_Entry": [{
+   "All_Positions___Jobs_group": [
+      {
+         "Company_WID": "c322030c5b5201fe77bddcfc23119d73",
+         "Location_Code": "BWW_0496",
+         "Pay_Rate_Type": "Hourly",
+         "POS_Job_Code": "11004",
+         "Company_-_ID": "BWW USA",
+         "Position_ID": "P-100057394",
+         "RTI_Department_Number": "Server 11004",
+         "Company_Ref_ID": "BWW_USA_Company",
+         "Job_Code": "50089"
+      },
+      {
+         "Company_WID": "c322030c5b5201fe77bddcfc23119d73",
+         "Location_Code": "BWW_0496",
+         "Pay_Rate_Type": "Hourly",
+         "POS_Job_Code": "11008",
+         "Company_-_ID": "BWW USA",
+         "Position_ID": "P-100057411",
+         "RTI_Department_Number": "Tipped Other 11008",
+         "Company_Ref_ID": "BWW_USA_Company",
+         "Job_Code": "50108"
+      },
+      {
+         "Company_WID": "c322030c5b5201fe77bddcfc23119d73",
+         "Location_Code": "BWW_0496",
+         "Pay_Rate_Type": "Hourly",
+         "POS_Job_Code": "11027",
+         "Company_-_ID": "BWW USA",
+         "Position_ID": "P-100057412",
+         "RTI_Department_Number": "Zones Training 11027",
+         "Company_Ref_ID": "BWW_USA_Company",
+         "Job_Code": "50117"
+      },
+      {
+         "Company_WID": "c322030c5b5201fe77bddcfc23119d73",
+         "Location_Code": "BWW_0496",
+         "Pay_Rate_Type": "Hourly",
+         "POS_Job_Code": "11010",
+         "Company_-_ID": "BWW USA",
+         "Position_ID": "P-100057413",
+         "RTI_Department_Number": "Training New Products 11010",
+         "Company_Ref_ID": "BWW_USA_Company",
+         "Job_Code": "50115"
+      }
+   ],
+   "Team_Member_ID": "100403085"
+},
+{
+   "All_Positions___Jobs_group": [
+{
+         "Company_WID": "c322030c5b5201fe77bddcfc23119d73",
+         "Location_Code": "BWW_0496",
+         "Pay_Rate_Type": "Hourly",
+         "POS_Job_Code": "11117",
+         "Company_-_ID": "BWW USA",
+         "Position_ID": "222222222222222",
+         "RTI_Department_Number": "Training Cashier 11117",
+         "Company_Ref_ID": "BWW_USA_Company",
+         "Job_Code": "50142"
+      },
+      {
+         "Company_WID": "c322030c5b5201fe77bddcfc23119d73",
+         "Location_Code": "BWW_0496",
+         "Pay_Rate_Type": "Hourly",
+         "POS_Job_Code": "11118",
+         "Company_-_ID": "BWW USA",
+         "Position_ID": "22222222222222222",
+         "RTI_Department_Number": "Training Greeter 11118",
+         "Company_Ref_ID": "BWW_USA_Company",
+         "Job_Code": "50141"
+      }
+   ],
+   "Team_Member_ID": "222222222"
+},
+{
+   "All_Positions___Jobs_group": [
+      {
+         "Company_WID": "c322030c5b520186f11fedfc2311b373",
+         "Location_Code": "RTO_0536",
+         "Pay_Rate_Type": "Hourly",
+         "POS_Job_Code": "11138",
+         "Company_-_ID": "RTCO USA",
+         "Position_ID": "P100378916",
+         "Company_Ref_ID": "RTACO_USA_Company",
+         "Job_Code": "50014"
+      },
+      {
+         "Company_WID": "c322030c5b520186f11fedfc2311b373",
+         "Location_Code": "RTO_0536",
+         "Pay_Rate_Type": "Hourly",
+         "POS_Job_Code": "11137",
+         "Company_-_ID": "RTCO USA",
+         "Position_ID": "P10037891611137",
+         "Company_Ref_ID": "RTACO_USA_Company",
+         "Job_Code": "50055"
+      }
+   ],
+   "Team_Member_ID": "100378916"
+},
+{
+   "All_Positions___Jobs_group": [
+      {
+         "Company_WID": "wwwwww",
+         "Location_Code": "RTO_0536",
+         "Pay_Rate_Type": "Hourly",
+         "POS_Job_Code": "11138",
+         "Company_-_ID": "RTCO USA",
+         "Position_ID": "P100378916",
+         "Company_Ref_ID": "RTACO_USA_Company",
+         "Job_Code": "50014",
+		 "Company": "skdh Sonic"
+      },
+      {
+         "Company_WID": "wwwwww",
+         "Location_Code": "RTO_0536",
+         "Pay_Rate_Type": "Hourly",
+         "POS_Job_Code": "11137",
+         "Company_-_ID": "RTCO USA",
+         "Position_ID": "444444444444444",
+         "Company_Ref_ID": "RTACO_USA_Company",
+         "Job_Code": "50055",
+		 "Company": "skdh Sonic"
+      }
+   ],
+   "Team_Member_ID": "444444444444"
+}]
+}

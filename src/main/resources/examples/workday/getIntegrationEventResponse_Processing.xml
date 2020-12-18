@@ -1,0 +1,72 @@
+<wd:Get_Integration_Events_Response xmlns:wd="urn:com.workday/bsvc" wd:version="v34.0">
+    <wd:Request_References>
+        <wd:Integration_Event_Reference>
+            <wd:ID wd:type="WID">2566fb6878f001c17ee31984bc4a025b</wd:ID>
+            <wd:ID wd:type="Background_Process_Instance_ID">INTEGRATION_ENTERPRISE_EVENT-6-4518</wd:ID>
+        </wd:Integration_Event_Reference>
+    </wd:Request_References>
+    <wd:Response_Results>
+        <wd:Total_Results>1</wd:Total_Results>
+        <wd:Total_Pages>1</wd:Total_Pages>
+        <wd:Page_Results>1</wd:Page_Results>
+        <wd:Page>1</wd:Page>
+    </wd:Response_Results>
+    <wd:Response_Data>
+        <wd:Integration_Event>
+            <wd:Integration_Event_Reference>
+                <wd:ID wd:type="WID">2566fb6878f001c17ee31984bc4a025b</wd:ID>
+                <wd:ID wd:type="Background_Process_Instance_ID">INTEGRATION_ENTERPRISE_EVENT-6-4518</wd:ID>
+            </wd:Integration_Event_Reference>
+            <wd:Integration_Event_Data>
+                <wd:Integration_System_Reference>
+                    <wd:ID wd:type="WID">d02a40754da00196750bd69b5f1fdc70</wd:ID>
+                    <wd:ID wd:type="Integration_System_ID">INTEGRATION_SYSTEM__AUDITED_-3-237</wd:ID>
+                </wd:Integration_System_Reference>
+                <wd:Process_Description>INT5019 Payroll Position Support File Based</wd:Process_Description>
+                <wd:Initiated_DateTime>2020-05-21T07:03:13.370-07:00</wd:Initiated_DateTime>
+                <wd:Initiated_By_System_Account_Reference>
+                    <wd:ID wd:type="WID">9c6fc9bce068014fd4341d407908bdc4</wd:ID>
+                    <wd:ID wd:type="System_User_ID">ISU_Mulesoft_API</wd:ID>
+                    <wd:ID wd:type="WorkdayUserName">ISU_Mulesoft_API</wd:ID>
+                </wd:Initiated_By_System_Account_Reference>
+                <wd:Percent_Complete>0.69</wd:Percent_Complete>
+                <wd:Integration_Runtime_Parameter_Data>
+                    <wd:Launch_Configurable_Name>INTEGRATION_FILE_UTILITY-6-34 (1)</wd:Launch_Configurable_Name>
+                    <wd:Parameter_Name wd:Label="File Name">Text</wd:Parameter_Name>
+                    <wd:Text>INT5069_Payroll_Positions_20200521070313.txt.pgp</wd:Text>
+                </wd:Integration_Runtime_Parameter_Data>
+                <wd:Integration_Runtime_Parameter_Data>
+                    <wd:Launch_Configurable_Name>INTEGRATION_FILE_UTILITY-6-34 (1)</wd:Launch_Configurable_Name>
+                    <wd:Parameter_Name wd:Label="Document Retention Policy">Numeric</wd:Parameter_Name>
+                </wd:Integration_Runtime_Parameter_Data>
+                <wd:Integration_Runtime_Parameter_Data>
+                    <wd:Launch_Configurable_Name>SFTP_TRANSPORT_PROTOCOL-6-140</wd:Launch_Configurable_Name>
+                    <wd:Parameter_Name wd:Label="Use Temp File">Boolean</wd:Parameter_Name>
+                    <wd:Boolean>0</wd:Boolean>
+                </wd:Integration_Runtime_Parameter_Data>
+                <wd:Integration_Runtime_Parameter_Data>
+                    <wd:Launch_Configurable_Name>SFTP_TRANSPORT_PROTOCOL-6-140</wd:Launch_Configurable_Name>
+                    <wd:Parameter_Name wd:Label="Address">Text</wd:Parameter_Name>
+                </wd:Integration_Runtime_Parameter_Data>
+                <wd:Integration_Runtime_Parameter_Data>
+                    <wd:Launch_Configurable_Name>SFTP_TRANSPORT_PROTOCOL-6-140</wd:Launch_Configurable_Name>
+                    <wd:Parameter_Name wd:Label="Directory">Text</wd:Parameter_Name>
+                </wd:Integration_Runtime_Parameter_Data>
+                <wd:Integration_Enterprise_Event_Records_Data>
+                    <wd:Total_Records>0</wd:Total_Records>
+                    <wd:Total_Records_Uploaded>0</wd:Total_Records_Uploaded>
+                    <wd:Total_Failed_Records>0</wd:Total_Failed_Records>
+                </wd:Integration_Enterprise_Event_Records_Data>
+            </wd:Integration_Event_Data>
+            <wd:Background_Process_Instance_Data>
+                <wd:Background_Process_Instance_Status_Reference>
+                    <wd:ID wd:type="WID">d8b0c17e446c11de98360015c5e6daf6</wd:ID>
+                    <wd:ID wd:type="Background_Process_Instance_Status_ID">Processing</wd:ID>
+                </wd:Background_Process_Instance_Status_Reference>
+                <wd:Parent_Event_Reference>
+                    <wd:ID wd:type="WID">2566fb6878f00136e7891f84bc4a095b</wd:ID>
+                </wd:Parent_Event_Reference>
+            </wd:Background_Process_Instance_Data>
+        </wd:Integration_Event>
+    </wd:Response_Data>
+</wd:Get_Integration_Events_Response>

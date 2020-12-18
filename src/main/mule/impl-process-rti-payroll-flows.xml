@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:isb-workday-payroll-system-api="http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api/current/mule-isb-workday-payroll-system-api.xsd">
+	<sub-flow name="retrieveRtiPayroll_subFlow" doc:id="17b740cb-7266-4546-b3f5-972d074188cd" >
+		<until-successful maxRetries="${util.retries.count}" doc:name="Until Successful" doc:id="06aa782f-a120-49d5-9f93-13a580d09139" millisBetweenRetries="${util.retries.delay}">
+			<http:request method="GET" doc:name="GET Payroll Information from RTI" doc:id="e1fe7b5c-3f41-4898-8587-102b8388057c" config-ref="HTTP_Payroll_POS_SYSTEM_Request_Configuration" responseTimeout="${util.timeout.intervalInMS}" outputMimeType="application/json" path="${secure::source.pos.https.path}">
+				<http:query-params><![CDATA[#[output application/java
+---
+{
+	posSystem : vars.processType
+}]]]></http:query-params>
+		</http:request>
+		</until-successful>
+		<ee:transform doc:name="set payrollDetails" doc:id="f3de32e5-aa4c-4f62-9f24-11afdbdfbf58" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="payrollDetails" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	posSystem: 'rti',
+	payrollStart: payload[0].startDate,
+	payrollEnd: payload[0].endDate,
+	batchId: payload[0].payrollBatchIdentifier
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapRtiPerfectPositionMatches_subFlow" doc:id="ad210da0-9147-4491-bb73-c34b52174e69" >
+		<ee:transform doc:name="map RTI for Perfect matches" doc:id="a8c9ce8e-a3d6-4d84-8cb1-923a962f4991" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+
+fun getId(item) = (
+    item.teamMemberIdentifier default "" ++ item.siteId default "" ++ item.jobCode default ""
+)
+
+fun getRTIId(item) = (
+	item.teamMemberIdentifier default "" ++ item.jobCode default ""
+)
+
+fun getWorkdayId(item) = (
+	item.TeamMemberID default "" ++ item.JobCode default ""
+)
+
+var filterOutSalaryJobs = leftJoin(payload default [], vars.jobProfiles default [], (l) -> getRTIId(l), (r) -> getWorkdayId(r)) filter (((($.l.amount !="" and $.l.amount !=null) or ($.l.units !="" and $.l.units !=null)) and $.l.earningCode != "NYTEN") or (isEmpty($.r))) default []
+
+var joinData = leftJoin(filterOutSalaryJobs["l"] default [],vars.lookupData default [], (l) -> getId(l), (r) -> r.rtiMatch)
+
+---
+joinData map ((item, index) -> {
+    "batchId": trim(item.l.batchId),
+    "payrollBatchIdentifier": trim(item.l.payrollBatchIdentifier),
+    "payrollInputIdentifier": trim(item.l.payrollInputIdentifier),
+    "startDate": trim(item.l.startDate),
+    "endDate": trim(item.l.endDate),
+    "teamMemberIdentifier": trim(item.l.teamMemberIdentifier),
+    "positionCode": (if (not (isEmpty(trim(item.l.hours)))) item.r.positionId else "") default "",
+    "siteId": trim(item.l.siteId),
+    "jobCode": trim(item.l.jobCode),
+    "earningCode": trim(item.l.earningCode),
+    "hours": trim(item.l.hours) default "",
+    "amount": trim(item.l.amount) default "",
+    "units": trim(item.l.units) default "",
+    "comments": trim(item.l.comments)
+}) filter (
+			($.hours !="" and $.hours !=null)
+			or
+			($.amount !="" and $.amount !=null)
+			or
+			($.units !="" and $.units !=null)
+		)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="set overallRtiPayroll, payload to perfect match fallouts" doc:id="ae6a1003-a367-4f15-8ca9-e049f8938701" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload default [] filter ((isEmpty($.positionCode)) and (not (isEmpty($.hours))))]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="overallRtiPayroll" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	perfectMatches: payload default [] filter (((not (isEmpty($.positionCode))) and (not (isEmpty($.hours)))) or
+		(not (isEmpty($.amount))) or
+		(not (isEmpty($.units))))
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapRtiPrimaryStoreAndJobMatches_subFlow" doc:id="5e696130-1853-4609-8ba6-61b5c7d469c2" >
+		<ee:transform doc:name="map RTI primary store and job matches" doc:id="2de110a6-8587-46e8-a1c2-d942d1739eff" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+
+fun getId(item) = (
+    item.teamMemberIdentifier default "" ++ "PrimaryStore" ++ item.jobCode default ""
+)
+
+var joinData = leftJoin(payload default [],vars.lookupData default [], (l) -> getId(l), (r) -> r.rtiPrimaryStoreAndJobMatch)
+---
+joinData map ((item, index) -> {
+    "batchId": trim(item.l.batchId),
+    "payrollBatchIdentifier": trim(item.l.payrollBatchIdentifier),
+    "payrollInputIdentifier": trim(item.l.payrollInputIdentifier),
+    "startDate": trim(item.l.startDate),
+    "endDate": trim(item.l.endDate),
+    "teamMemberIdentifier": trim(item.l.teamMemberIdentifier),
+    "positionCode": (if (not (isEmpty(trim(item.l.hours)))) item.r.positionId else "") default "",
+    "siteId": trim(item.l.siteId),
+    "jobCode": trim(item.l.jobCode),
+    "earningCode": trim(item.l.earningCode),
+    "hours": trim(item.l.hours) default "",
+    "amount": trim(item.l.amount) default "",
+    "units": trim(item.l.units) default "",
+    "comments": trim(item.l.comments),
+    ("overrideCostCenter": vars.costCenterLookup[?$.storeCode == item.l.siteId].costCenter[0] default "") if ((not (isEmpty(item.r.storeCode))) and item.l.siteId != item.r.storeCode)
+}) filter (
+			($.hours !="" and $.hours !=null)
+			or
+			($.amount !="" and $.amount !=null)
+			or
+			($.units !="" and $.units !=null)
+		)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="set overallRtiPayroll, payload to store match fallouts" doc:id="e33c6d48-7c77-4d37-96b8-837689673c1c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload default [] filter (isEmpty($.positionCode))]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="overallRtiPayroll" ><![CDATA[%dw 2.0
+output application/json
+---
+( vars.overallRtiPayroll default {} )
+++
+{
+	primaryStoreMatches: payload default [] filter (not (isEmpty($.positionCode))) map {
+		"batchId": $.batchId ++"_Adjustments",
+    	"payrollBatchIdentifier": $.payrollBatchIdentifier ++"_Adjustments",
+	    "payrollInputIdentifier": $.payrollInputIdentifier,
+    	"startDate": $.startDate,
+	    "endDate": $.endDate,
+    	"teamMemberIdentifier": $.teamMemberIdentifier,
+	    "positionCode": $.positionCode,
+    	"siteId": $.siteId,
+    	"jobCode": $.jobCode,
+ 	   	"earningCode": $.earningCode,
+    	"hours": $.hours,
+	    "amount": $.amount,
+	    "units": $.units,
+    	"comments": $.comments,
+	    ("overrideCostCenter": $.overrideCostCenter) if (not (isEmpty($.overrideCostCenter)))
+	}
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapRtiPrimaryJobMatches_subFlow" doc:id="af8c4dd4-8ed3-4b15-99c0-fa5c9e12044d" >
+		<ee:transform doc:name="map RTI primary job matches" doc:id="3f32c1fd-1467-4ac2-9e8d-25d15e52fc2e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+
+fun getId(item) = (
+    item.teamMemberIdentifier default "" ++ "PrimaryJob"
+)
+
+fun getWorkdayId(item) = (
+	item.TeamMemberID default "" ++ item.JobCode default ""
+)
+
+var joinData = leftJoin(payload default [],vars.lookupData default [], (l) -> getId(l), (r) -> r.rtiPrimaryJobMatch)
+---
+joinData map ((item, index) -> {
+    "batchId": trim(item.l.batchId),
+    "payrollBatchIdentifier": trim(item.l.payrollBatchIdentifier),
+    "payrollInputIdentifier": trim(item.l.payrollInputIdentifier),
+    "startDate": trim(item.l.startDate),
+    "endDate": trim(item.l.endDate),
+    "teamMemberIdentifier": trim(item.l.teamMemberIdentifier),
+    "positionCode": (if (not (isEmpty(trim(item.l.hours)))) item.r.positionId else "") default "",
+    "siteId": trim(item.l.siteId),
+    "jobCode": trim(item.l.jobCode),
+    "earningCode": trim(item.l.earningCode),
+    "hours": trim(item.l.hours) default "",
+    "amount": trim(item.l.amount) default "",
+    "units": trim(item.l.units) default "",
+    "comments": trim(item.l.comments),
+    ("overrideCostCenter": vars.costCenterLookup[?$.storeCode == item.l.siteId].costCenter[0] default "") if ((not (isEmpty(item.r.storeCode))) and item.l.siteId != item.r.storeCode)
+}) filter (
+			($.hours !="" and $.hours !=null)
+			or
+			($.amount !="" and $.amount !=null)
+			or
+			($.units !="" and $.units !=null)
+		)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="set overallRtiPayroll, payload to null" doc:id="5df124bd-0a45-4ab2-b8c3-acd5ba497dd2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+null]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="overallRtiPayroll" ><![CDATA[%dw 2.0
+output application/json
+---
+( vars.overallRtiPayroll default {} )
+++
+{
+	primaryJobMatches: payload default [] filter (not (isEmpty($.positionCode))) map {
+		"batchId": $.batchId ++"_Adjustments",
+    	"payrollBatchIdentifier": $.payrollBatchIdentifier ++"_Adjustments",
+	    "payrollInputIdentifier": $.payrollInputIdentifier,
+    	"startDate": $.startDate,
+	    "endDate": $.endDate,
+    	"teamMemberIdentifier": $.teamMemberIdentifier,
+	    "positionCode": $.positionCode,
+    	"siteId": $.siteId,
+    	"jobCode": $.jobCode,
+ 	   	"earningCode": $.earningCode,
+    	"hours": $.hours,
+	    "amount": $.amount,
+    	"comments": $.comments,
+	    ("overrideCostCenter": $.overrideCostCenter) if (not (isEmpty($.overrideCostCenter)))
+	},
+	fallouts: payload default [] filter (isEmpty($.positionCode))
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapRtiPayrollData_subFlow" doc:id="2c6c77cb-01cb-4b1b-a9f1-ab2f648f6f31" >
+		<flow-ref doc:name="mapRtiPerfectPositionMatches_subFlow" doc:id="14c20f80-e3ab-43e5-bcd9-30a8e76cd83e" name="mapRtiPerfectPositionMatches_subFlow"/>
+		<flow-ref doc:name="mapRtiPrimaryStoreAndJobMatches_subFlow" doc:id="380b8c24-b67f-4ce0-b71a-915b28823805" name="mapRtiPrimaryStoreAndJobMatches_subFlow"/>
+		<flow-ref doc:name="mapRtiPrimaryJobMatches_subFlow" doc:id="a2072844-c11e-4991-9461-a12ecc62624d" name="mapRtiPrimaryJobMatches_subFlow"/>
+		<ee:transform doc:name="set payload, rtiAdjustmentsBatch" doc:id="3e81e1a1-45f2-48b2-8994-affc7c838b86" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+(vars.overallRtiPayroll.perfectMatches default []) ++
+(vars.overallRtiPayroll.fallouts default [])
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="rtiAdjustmentsBatch" ><![CDATA[%dw 2.0
+output application/json
+---
+(vars.overallRtiPayroll.primaryStoreMatches default []) ++
+(vars.overallRtiPayroll.primaryJobMatches default [])]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapRtiPosReconEntries_subFlow" doc:id="a1f6e542-9b38-460a-9a7f-63be1a8a9c44" >
+		<ee:transform doc:name="map PosEntries payload" doc:id="df960d81-73df-4f6e-bea7-e24a5e6efd91" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+fun mapPosEntry(payrollEntries, positionMatchType) = payrollEntries map {
+	teamMemberId: $.teamMemberIdentifier,
+	earningCode: $.earningCode,
+	hours: $.hours default "",
+	amount: $.amount default "",
+	units: $.units default "",
+	jobCode: $.jobCode default "",
+	site: $.siteId default "",
+	positionId: $.positionCode default "",
+	positionMatch: positionMatchType,
+	overrideCostCenter: $.overrideCostCenter default "",
+	batchId: $.payrollBatchIdentifier,
+	startDate: $.startDate,
+	endDate: $.endDate,
+	payrollInputId: $.payrollInputIdentifier
+	}
+---
+{
+  "reconEntries": mapPosEntry(vars.overallRtiPayroll.perfectMatches default [], 'Perfect Match') ++
+  	mapPosEntry(vars.overallRtiPayroll.primaryStoreMatches default [], 'Partial Match - Job In Primary Store') ++
+  	mapPosEntry(vars.overallRtiPayroll.primaryJobMatches default [], 'Partial Match - Primary Job') ++
+  	mapPosEntry(vars.overallRtiPayroll.fallouts default [], 'No Match')
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="sendRtiPosReconEntries_subFlow" doc:id="39767444-fa5c-43c3-bad2-d1ce5e044731" >
+		<flow-ref doc:name="mapRtiPosReconEntries_subFlow" doc:id="7c6665cc-f13b-462c-aa1c-73cd24bf7c8a" name="mapRtiPosReconEntries_subFlow"/>
+		<http:request method="POST" doc:name="POST RTI Recon Entries to POS Payroll System API" doc:id="f4566fd9-ffe8-4127-b02a-124817717fbf" config-ref="HTTP_Payroll_POS_SYSTEM_Request_Configuration" sendCorrelationId="ALWAYS" path="${secure::source.pos.https.recon.path}">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"payrollEnd" : vars.payrollDetails.payrollEnd,
+	"payrollStart" : vars.payrollDetails.payrollStart,
+	"batchId" : vars.payrollDetails.batchId,
+	"posSystem" : vars.payrollDetails.posSystem
+}]]]></http:query-params>
+		</http:request>
+	</sub-flow>
+	<sub-flow name="sendRtiPayrollToWorkday_subFlow" doc:id="ae7a38c3-9daf-4567-90fc-9f98fe459150" >
+		<choice doc:name="Choice" doc:id="985b9c3c-8c6b-4910-b130-8237883a9cff" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<flow-ref doc:name="sendPayrollDataToWorkday_subFlow - RTI Primary" doc:id="0f999252-0535-421a-9f61-a0617b0ea244" name="sendPayrollDataToWorkday_subFlow" target="rtiNormalBatchResponse"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="set rtiNormalBatchResponse" doc:id="5a1b2cc4-05d5-476e-93e2-5070d0e5079c" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="rtiNormalBatchResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "message": "There were no records to send for the primary batch."
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="set payload to rtiAdjustmentsBatch" doc:id="c295c1fe-ce36-4c88-8641-9f30c6fa0461" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.rtiAdjustmentsBatch]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="a9cc6b22-b4df-4c0f-a7c7-03ab73a162ac" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<flow-ref doc:name="sendPayrollDataToWorkday_subFlow - RTI Adjustments" doc:id="c3896bed-7bee-43af-b5e9-f1dcc8840d13" target="rtiAdjustmentsBatchResponse" name="sendPayrollDataToWorkday_subFlow"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="set ritAdjustmentsBatchResponse" doc:id="7d1c0300-c4c6-4c92-92a1-d67d8fcecc64" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="rtiAdjustmentsBatchResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "message": "There were no records to send for the adjustments batch."
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="set final response payload" doc:id="ee205e50-1331-46ca-847e-7e35b715cbf9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	primaryBatch: vars.rtiNormalBatchResponse.message default "",
+	adjustmentsBatch: vars.rtiAdjustmentsBatchResponse.message default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<flow name="impl-process-rti-payroll-flows" doc:id="bae2d900-47bd-4b27-a027-11f4cc55d979" maxConcurrency="1">
+	    <flow-ref doc:name="Start Log" doc:id="7fd8dbc1-fc67-453f-834d-fbd97c717f3a" name="sf-start-log"/>
+		<flow-ref doc:name="Flow Reference - retrieveRtiPayroll_subFlow" doc:id="49cfeb4f-5919-477f-8e5e-f6b0793f540a" name="retrieveRtiPayroll_subFlow" />
+		<set-variable value='ARBUSA' doc:name="Set LookupKey Variable" doc:id="81683096-0066-49d7-afcb-9a19f0125a94" variableName="lookupKey"/>
+		<flow-ref doc:name="Get Salary Job Profiles" doc:id="c3c58fcd-bbba-468f-a0ea-32be592fda7d" name="sf-get-job-profiles" target="jobProfiles"/>
+		<flow-ref doc:name="Get Lookup Data" doc:id="13200901-4572-4f97-9af5-853c5d3ae612" target="lookupData" targetValue="#[payload]" name="cache-positions-lookup-data-flow"/>
+		<flow-ref doc:name="getCostCenterInformation_subFlow" doc:id="92b51898-f08f-426c-8b62-bbb8ab23e581" name="getCostCenterInformation_subFlow" target="costCenterLookup"/>
+		<logger level="INFO" doc:name="Data Lookup Logger" doc:id="505de564-e2ec-4005-b419-1dd17f0330a8" message="Loaded RTI Lookup Data" category="${logger.category}"/>
+		<flow-ref doc:name="mapRtiPayrollData_subFlow" doc:id="bf429841-b529-4104-899f-ec78e696e5e5" name="mapRtiPayrollData_subFlow"/>
+		<logger level="INFO" doc:name="Inprogress Logger" doc:id="aa894f1c-b7fc-41d1-8fef-164e0d46fc0c" message="Created Payload, posting to Workday: #[payload]" category="${logger.category}"/>
+		<flow-ref doc:name="sendRtiPayrollToWorkday_subFlow" doc:id="ac091e99-9a1a-4148-8034-e102a61695cd" name="sendRtiPayrollToWorkday_subFlow"/>
+		<flow-ref doc:name="sendRtiPostReconEntries_subFlow" doc:id="3ad4c8dc-76e6-4fbd-adc7-5dda3a2fdeca" name="sendRtiPosReconEntries_subFlow" target="posReconResponse"/>
+		<flow-ref doc:name="End Log" doc:id="1b6b72e2-a2be-420d-bbb9-02bd2eddcac9" name="sf-end-log"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="51781bae-639e-4f1b-9aab-9ec43f23fcb2" >
+				<ee:transform doc:name="Transform Message" doc:id="8e75a795-8cfc-4389-893b-c2cb027aeae5" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	code: error.errorType,
+	message: error.description,
+	transactionId: correlationId
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="ERROR" doc:name="Error Logger" doc:id="2ccee402-5730-4df0-9c68-2029f83d3db4" message="#[payload]" category="${logger.category}"/>
+				<flow-ref doc:name="Error Log" doc:id="66f2c46d-6c90-41af-8b43-3b528518fc9d" name="sf-error-log"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

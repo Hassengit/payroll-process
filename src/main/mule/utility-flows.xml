@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:compression="http://www.mulesoft.org/schema/mule/compression"
+	xmlns:crypto="http://www.mulesoft.org/schema/mule/crypto"
+	xmlns:redis="http://www.mulesoft.org/schema/mule/redis" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/redis http://www.mulesoft.org/schema/mule/redis/current/mule-redis.xsd
+http://www.mulesoft.org/schema/mule/crypto http://www.mulesoft.org/schema/mule/crypto/current/mule-crypto.xsd
+http://www.mulesoft.org/schema/mule/compression http://www.mulesoft.org/schema/mule/compression/current/mule-compression.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<sub-flow name="sendPayrollDataToWorkday_subFlow" doc:id="0e233dc3-de16-40f4-8f5d-3ac76135c5ac" >
+		<http:request method="POST" doc:name="POST Payroll Data to Workday" doc:id="f430e772-10ba-409e-8021-e857e7812ee6" config-ref="HTTP_Payroll_Workday_POST_Request_Configuration" path="${secure::target.workday.https.path}" outputMimeType="application/json" responseTimeout="${util.timeout.intervalInMS}">
+		</http:request>
+	</sub-flow>
+	<sub-flow name="sf-get-job-profiles" doc:id="a08f9f85-1b6f-438f-b656-6b1995d3a45f" >
+		<logger level="INFO" doc:name="Start Logger" doc:id="8a96cf9b-108a-411c-8cac-a296eafc070e" category="${logger.category}" message="Started pulling Job Profile data from Workday"/>
+		<http:request method="GET" doc:name="Get Job Profiles" doc:id="c1a9b9f3-d8e6-49f8-826c-8ce415019c74" config-ref="HTTP_Payroll_Lookup_API_Request_Configuration" path="${secure::api.payroll.lookup.mgmtWorkers}" responseTimeout="${util.timeout.intervalInMS}">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"format" : "json"
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="8832ce49-9d75-4471-b5ed-3949c6e89990" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+fun isNotEmpty(value) = (
+    (not (isEmpty(value)))
+)
+
+var tempSalaryJobs = (payload.Report_Entry filter ($.Worker_Brand == "ARB" and $.Pay_Rate_Type == "Salary")) default []
+
+var salaryJobs = tempSalaryJobs map ((item, index) -> {
+    "TeamMemberID": item.Team_Member_ID,
+    "JobCode": "64"
+})
+---
+salaryJobs]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Logger" doc:id="de422804-c06a-46d7-a7f5-b709e6c4ca43" message="Completed pulling Job Profile data from Workday" category="${logger.category}"/>
+	</sub-flow>
+	<sub-flow name="getCostCenterInformation_subFlow" doc:id="eba75fa8-c478-4041-a730-d64b1ddde2d1" >
+		<logger level="DEBUG" doc:name="DEBUG Logger - start HTTP Request to get location custom object data" doc:id="ffa844ae-6ab7-48ca-9b30-d42f387db236" message="Retrieving Location Custom Object data." category="${logger.category}"/>
+		<http:request method="GET" doc:name="Get Custom Location Information from Workday System API" doc:id="5f2a8e4a-e76d-4f3b-9b99-5a84cd7066b5" config-ref="HTTP_Workday_System_API_Request_configuration" path="${secure::source.workday.system.api.customLocationPath}" sendCorrelationId="ALWAYS">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Accept" : "application/json"
+}]]]></http:headers>
+		</http:request>
+		<logger level="DEBUG" doc:name="DEBUG Logger - Completed HTTP Request " doc:id="21505459-224b-4485-92c4-8116c0c625c0" message="Completed Location Custom Object data retrieval" category="${logger.category}"/>
+		<ee:transform doc:name="Map Stores and Cost Centers" doc:id="1b1eb4fe-79bd-4713-ab0b-c72f28f05156" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.Report_Entry filter (not (isEmpty($.Cost_Center))) map {
+	storeCode: $.referenceID,
+	costCenter: $.Cost_Center
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<flow name="cache-positions-lookup-data-flow" doc:id="d0d80a91-a143-44ae-b0a1-cdb242dad4e5" >
+<!-- 		<json-logger:logger-scope doc:name="Logger scope" doc:id="1ea24656-1fa9-45f6-bd66-cd0eb711df7d" configurationRef="JSON_Logger_Config"> -->
+			<logger level="INFO" doc:name="Logger" doc:id="ff740f37-0491-4a4d-b55e-f6f3f996e0b5" message="#[&quot;before calling redis to get &quot; ++ p('env') ++ &quot;_wrkdy_position_&quot; ++ vars.lookupKey ++ ' company']"/>
+			<redis:get doc:name="Get" doc:id="b84398d9-83b8-431d-9063-096b27beb2bc" key="#[p('env') ++ &quot;_wrkdy_position_&quot; ++ vars.lookupKey]" config-ref="Redus_Config_Menu"/>
+<!-- 		<crypto:pgp-decrypt doc:name="Decrypt Lookup Data" doc:id="2f472eba-7792-4fad-ab5b-7df25fa6d9b6" config-ref="PositionsData_Crypto_Pgp" outputMimeType="application/json"> -->
+<!-- 			<crypto:content><![CDATA[#[vars.lookupResponse]]]></crypto:content> -->
+<!-- 		</crypto:pgp-decrypt> -->
+		<ee:transform doc:name="Transform Message" doc:id="d98a7b2c-8d51-4597-a9a9-dc31e32261f8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import fromBase64 from dw::core::Binaries
+output application/java
+---
+fromBase64(payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<compression:decompress doc:name="Decompress" doc:id="83d2a434-a057-44f2-af77-06bd01445460">
+			<compression:decompressor>
+				<compression:gzip-decompressor />
+			</compression:decompressor>
+		</compression:decompress>
+		<ee:transform doc:name="Transform Message" doc:id="c0d3278e-2029-44ce-b550-864296376904">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+read(payload, "application/json")]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="set company" doc:id="6a0b5f68-ea35-4650-9f0e-aa2b81c2c7f3" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="currentCompany" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.company]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="generate payroll data" doc:id="c0a3d0df-4c94-42b7-be8a-0c34126c90db" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+fun getStandardMatchKey(teamMemberId, position) = teamMemberId ++ (position.Location_Code default "") ++ (position.POS_Job_Code default "")
+fun getRtiMatchKey(teamMemberId, position) = teamMemberId ++ (position.Location_Code default "") ++ (position.RTI_Department_Number default "")
+fun getStandardPrimaryJobMatchkey(teamMemberId, position) = (
+	if (position.Primary_Job == "1") (teamMemberId ++ "PrimaryJob")
+	else "")
+fun getAltaMatchKey(teamMemberId, position) = (teamMemberId ++ (position.Location_Code default "") ++ (position.Job_Code default ""))	
+fun getRtiPrimaryJobMatchkey(teamMemberId, position) = (
+	if (position.Primary_Job == "1") (teamMemberId ++ "PrimaryJob")
+	else "")
+fun getStandardPrimaryStoreAndJobMatch(teamMemberId, workerPrimaryLocation, position) = (
+	if (workerPrimaryLocation == position.Location_Code) (teamMemberId ++ "PrimaryStore" ++ (position.Job_Code default ""))
+	else "")
+fun getRtiPrimaryStoreAndJobMatch(teamMemberId, workerPrimaryLocation, position) = (
+	if (workerPrimaryLocation == position.Location_Code) (teamMemberId ++ "PrimaryStore" ++ (position.RTI_Department_Number default ""))
+	else "")
+fun brandKey(standardKey, rtiKey) = (
+	if (vars.currentCompany.companyCode contains("ARB")) rtiKey
+	else standardKey)
+---
+flatten(payload.Report_Entry map ((item, index) -> (
+	(
+		item.All_Positions___Jobs_group map {
+			standardMatch: getStandardMatchKey(item.Team_Member_ID, $),
+			rtiMatch: getRtiMatchKey(item.Team_Member_ID, $),
+			positionId: $.Position_ID,
+			payGroup: $.Pay_Group default "",
+			standardPrimaryJobMatch: getStandardPrimaryJobMatchkey(item.Team_Member_ID, $),
+			standardPrimaryStoreAndJobMatch: getStandardPrimaryStoreAndJobMatch(item.Team_Member_ID, item.Worker_Location, $),
+			rtiPrimaryJobMatch: getRtiPrimaryJobMatchkey(item.Team_Member_ID, $),
+			rtiPrimaryStoreAndJobMatch: getRtiPrimaryStoreAndJobMatch(item.Team_Member_ID, item.Worker_Location, $),
+			storeCode: ($.Location_Code default ""),
+			altaMatch: getAltaMatchKey(item.Team_Member_ID, $),
+			company: vars.lookupKey default "inspire"
+		} distinctBy brandKey($.standardMatch, $.rtiMatch)
+	)
+)))]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="Logger" doc:id="b379ceef-bf2c-487d-8e40-7a31a179b9df" config-ref="JSON_Logger_Config" message="one object">
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: payload[0]
+}]]]></json-logger:content>
+		</json-logger:logger>
+<!-- 		</json-logger:logger-scope> -->
+<!-- 		<crypto:pgp-decrypt doc:name="Decrypt Lookup Data" doc:id="d128b734-67b2-4d4d-a47d-6e6b2e11b8a2" config-ref="NBO_Crypto_Pgp" outputMimeType="application/json"> -->
+<!-- 			<crypto:content><![CDATA[#[vars.lookupResponse]]]></crypto:content> -->
+<!-- 		</crypto:pgp-decrypt> -->
+	
+</flow>
+</mule>

@@ -1,0 +1,19 @@
+#%RAML 1.0 Trait
+queryParameters:
+  offset: 
+    type: integer
+    default: 0
+    required: false
+  limit:
+    type: integer
+    default: 1000
+    required: false
+responses:
+  200:
+    headers:
+      x-page-no: string
+      x-page-count: string
+      x-page-size: integer
+      x-next-url: string
+      x-prev-url: string
+      x-curr-url: string

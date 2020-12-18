@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="www.inspirebrands.com/isb/job"
+    targetNamespace="www.inspirebrands.com/isb/job" elementFormDefault="qualified"
+    xmlns:ns1="www.inspirebrands.com/isb/worker">
+    <xs:element name="Jobs">
+        <xs:complexType>
+            <xs:sequence maxOccurs="unbounded" minOccurs="0">
+                <xs:element name="Job" type="Job" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Job">
+        <xs:annotation>
+            <xs:documentation/>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="JobProfileIdentifier" type="ISBStringType" minOccurs="0"/>
+            <xs:element minOccurs="0" name="Metadata">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="ActionType" type="ISBStringType" minOccurs="0">
+                            <xs:annotation>
+                                <xs:documentation>Updates</xs:documentation>
+                            </xs:annotation>
+                        </xs:element>
+                        <xs:element name="Environment" type="ISBStringType" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="EffectiveDate" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="JobTitle" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="JobLevel" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="PayRateType" type="ISBStringType" minOccurs="0"/>
+            <xs:element minOccurs="0" name="DoubleTimePayRate" type="ISBStringType"/>
+            <xs:element minOccurs="0" name="OverTimePayRate" type="ISBStringType"/>
+            <xs:element minOccurs="0" name="RegularPayRate" type="ISBStringType"/>
+            <xs:element name="Type" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="IsManagerScheduled" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="IsScheduledFlag" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="IsExtraPayFlag" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="IsPremiumPayFlag" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="IsTipEligibleFlag" type="ISBStringType" minOccurs="0"/>
+            <xs:element minOccurs="0" name="JobDepartment" type="ISBStringType"/>
+            <xs:element name="InactiveFlag" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="JobFamilyGroup" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="JobFamilyIdentifier" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="JobCategoryIdentifier" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="WorkerCompensationCode" type="ISBStringType" minOccurs="0"/>
+            <xs:element name="WorkerCompensationCodeReg" type="ISBStringType" minOccurs="0"/>
+            <xs:element minOccurs="0" name="JobColorCode" type="ISBStringType"/>
+            <xs:element minOccurs="0" name="JobCodeSymbol" type="ISBStringType"/>
+            <xs:element minOccurs="0" name="JobClassCode" type="ISBStringType"/>
+            <xs:element minOccurs="0" name="JobClassGroupCode" type="ISBStringType"/>
+           
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="NVPairs" type="NVPairs"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ISBLongStringType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:simpleType name="ChangeIndicatorType">
+        <xs:annotation>
+            <xs:documentation>Boolean flag identifying if a field has a new value.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:boolean"> </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="LanguageType">
+        <xs:annotation>
+            <xs:documentation>string identifying language. </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string"> </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="CurrencyType">
+        <xs:annotation>
+            <xs:documentation>string identifying Currency. </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string"> </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="ISBStringType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+
+    <xs:complexType name="ISBStringCurrencyType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="currency" type="CurrencyType"/>
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+            </xs:extension>
+        </xs:simpleContent>
+
+    </xs:complexType>
+
+    <xs:complexType name="ISBDoubleType">
+        <xs:simpleContent>
+            <xs:extension base="xs:double">
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="ISBFloatType">
+        <xs:simpleContent>
+            <xs:extension base="xs:float">
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="ISBLongType">
+        <xs:simpleContent>
+            <xs:extension base="xs:long">
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="ISBIntType">
+        <xs:simpleContent>
+            <xs:extension base="xs:int">
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="ISBBooleanType">
+        <xs:simpleContent>
+            <xs:extension base="BooleanType">
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+            </xs:extension>
+
+        </xs:simpleContent>
+
+    </xs:complexType>
+
+    <xs:complexType name="ISBBooleanExType">
+        <xs:simpleContent>
+            <xs:extension base="BooleanType">
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+                <xs:attribute name="referenceType" type="xs:string"/>
+            </xs:extension>
+
+        </xs:simpleContent>
+
+    </xs:complexType>
+
+    <xs:complexType name="ISBDateTimeType">
+        <xs:simpleContent>
+            <xs:extension base="xs:dateTime">
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="ISBComplexType">
+        <xs:simpleContent>
+            <xs:extension base="xs:decimal">
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="ISBDateType">
+        <xs:simpleContent>
+            <xs:extension base="xs:date">
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="ISBDecimalType">
+        <xs:simpleContent>
+            <xs:extension base="xs:decimal">
+                <xs:attribute name="changed" type="ChangeIndicatorType"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:simpleType name="BooleanType">
+        <xs:restriction base="xs:boolean"> </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="NVPairs">
+        <xs:sequence minOccurs="0">
+            <xs:element name="Name" type="ISBStringType"/>
+            <xs:element minOccurs="0" name="Value" type="ISBStringType"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

@@ -1,0 +1,36 @@
+util:
+  lookups:
+    os:
+      max:
+        retries: "3"
+      interval: "3000"
+  timeout:
+    intervalInMS: "300000"
+  retries:
+    count: "3"
+    delay: "3000"
+  solver:
+    changes:
+      batchSize: "25"  
+
+logger:
+  category: "com.isb.payroll.process.api"
+  node: "Payroll"
+  resource: "PAYROLL-PROCESS"
+  worksiteResource: "PAYROLL-PROCESS"
+  auditType: "AUDIT"
+  errorType: "ERROR"
+  infoType: "INFO"
+  warnType: "WARN"
+  debugType: "DEBUG"
+  startCIType: "START"
+  inprogressCIType: "INPROGRESS"
+  endCIType: "END"
+  
+schedules:
+  positionLookup: "0 01 00 ? * SUN-SAT"
+json:
+  logger:
+    application:
+      version: "1.0.0"
+      name: "stg-isb-payroll-process-api"  

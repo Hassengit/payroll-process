@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:isb-workday-payroll-system-api="http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api/current/mule-isb-workday-payroll-system-api.xsd">
+	<flow name="impl-process-matrix-payroll-flows" doc:id="bae2d900-47bd-4b27-a027-11f4cc55d979" maxConcurrency="1">
+	    <flow-ref doc:name="Start Log" doc:id="107a9ef2-b5b1-483c-b1cb-e7cb09fa48da" name="sf-start-log"/>
+		<until-successful maxRetries="${util.retries.count}" doc:name="Until Successful" doc:id="9c109146-621d-4f5f-a7a7-ea7f24bf79ff" millisBetweenRetries="${util.retries.delay}">
+			<http:request method="GET" doc:name="GET Payroll Information from Matrix" doc:id="e1fe7b5c-3f41-4898-8587-102b8388057c" config-ref="HTTP_Payroll_POS_SYSTEM_Request_Configuration" responseTimeout="${util.timeout.intervalInMS}" outputMimeType="application/json" path="${secure::source.pos.https.path}">
+				<http:query-params ><![CDATA[#[output application/java
+---
+{
+	posSystem : vars.processType
+}]]]></http:query-params>
+		</http:request>
+		</until-successful>
+		<ee:transform doc:name="Transform Message" doc:id="ca44d552-eb58-4620-9e26-049d7eaeec01" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="POST Payroll Data to Workday" doc:id="f430e772-10ba-409e-8021-e857e7812ee6" config-ref="HTTP_Payroll_Workday_POST_Request_Configuration" path="${secure::target.workday.https.path}" outputMimeType="application/json" responseTimeout="${util.timeout.intervalInMS}">
+		</http:request>
+		
+        <flow-ref doc:name="End Log" doc:id="7c6a4ae3-77bb-48a7-84c1-6333f70fede8" name="sf-end-log"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fc5e35a9-fe00-47bd-bb64-67fddcdd3c56" >
+				<ee:transform doc:name="Transform Message" doc:id="228906bd-cf20-40ea-af9c-1a8c5f774c5b" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	code: error.errorType,
+	message: error.description,
+	transactionId: correlationId
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="ERROR" doc:name="Logger" doc:id="3999e2fc-0580-4704-8d02-b5172a265467" message="#[payload]" category="${logger.category}"/>
+               <flow-ref doc:name="Error Log" doc:id="09a9e2d8-9d21-4c39-aec5-56eb3f72446a" name="sf-error-log"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

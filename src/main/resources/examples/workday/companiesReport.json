@@ -1,0 +1,58 @@
+{
+   "Report_Entry": [
+      {
+         "Company": "ARB USA ARG Resources LLC",
+         "code": "ARB USA",
+         "Reference_ID": "ARB_USA_Company",
+         "workdayID": "c322030c5b5201337a43bafc23117973"
+      },
+      {
+         "Company": "ARB CAN Arby's of Canada",
+         "code": "ARB CAN",
+         "Reference_ID": "ARB_CAN_Company",
+         "workdayID": "c322030c5b5201ea8804c8fc23118473"
+      },
+      {
+         "Company": "IB FOUND Inspire Brands Foundation",
+         "code": "IB FOUND",
+         "Reference_ID": "IB_FOUND_Company",
+         "workdayID": "c322030c5b52010abc45d1fc23119273"
+      },
+      {
+         "Company": "BWW USA BWW Resources LLC",
+         "code": "BWW USA",
+         "Reference_ID": "BWW_USA_Company",
+         "workdayID": "c322030c5b5201fe77bddcfc23119d73"
+      },
+      {
+         "Company": "BWW CAN Blazin Wings Canada",
+         "code": "BWW CAN",
+         "Reference_ID": "BWW_CAN_Company",
+         "workdayID": "c322030c5b52017b0b00e5fc2311a873"
+      },
+      {
+         "Company": "RTCO USA Rusty Taco",
+         "code": "RTCO USA",
+         "Reference_ID": "RTACO_USA_Company",
+         "workdayID": "c322030c5b520186f11fedfc2311b373"
+      },
+      {
+         "Company": "SONSRI USA Sonic Operating Company",
+         "code": "SONSRI USA",
+         "Reference_ID": "SONSRI_USA_Company",
+         "workdayID": "c322030c5b5201806ba9f9fc2311be73"
+      },
+      {
+         "Company": "SONSII USA Sonic Industries Services INC",
+         "code": "SONSII USA",
+         "Reference_ID": "SONSII_USA_Company",
+         "workdayID": "c322030c5b520113a64d03fd2311c973"
+      },
+      {
+         "Company": "BWI USA Blazin Wings, Inc.",
+         "code": "BWI USA",
+         "Reference_ID": "BWI_USA_Company",
+         "workdayID": "c322030c5b5201eaeabe0dfd2311d473"
+      }
+   ]
+}

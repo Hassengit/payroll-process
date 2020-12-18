@@ -1,0 +1,62 @@
+[
+  {
+    "standardMatch": "100294527RTO_069712214",
+    "rtiMatch": "100294527RTO_0697",
+    "positionId": "P100294527",
+    "standardPrimaryJobMatch": "100294527PrimaryJob",
+    "standardPrimaryStoreAndJobMatch": "100294527PrimaryStore12214",
+    "rtiPrimaryJobMatch": "100294527PrimaryJob",
+    "rtiPrimaryStoreAndJobMatch": "100294527PrimaryStore",
+    "storeCode": "RTO_0697"
+  },
+  {
+    "standardMatch": "100294524RTO_069612214",
+    "rtiMatch": "100294524RTO_0696",
+    "positionId": "P100294524",
+    "standardPrimaryJobMatch": "100294524PrimaryJob",
+    "standardPrimaryStoreAndJobMatch": "100294524PrimaryStore12214",
+    "rtiPrimaryJobMatch": "100294524PrimaryJob",
+    "rtiPrimaryStoreAndJobMatch": "100294524PrimaryStore",
+    "storeCode": "RTO_0696"
+  },
+  {
+    "standardMatch": "100294586RTO_069611137",
+    "rtiMatch": "100294586RTO_0696",
+    "positionId": "P-100002555",
+    "standardPrimaryJobMatch": "100294586PrimaryJob",
+    "standardPrimaryStoreAndJobMatch": "100294586PrimaryStore11137",
+    "rtiPrimaryJobMatch": "100294586PrimaryJob",
+    "rtiPrimaryStoreAndJobMatch": "100294586PrimaryStore",
+    "storeCode": "RTO_0696"
+  },
+  {
+    "standardMatch": "100294586RTO_069611133",
+    "rtiMatch": "100294586RTO_0696",
+    "positionId": "P10029458611133",
+    "standardPrimaryJobMatch": "",
+    "standardPrimaryStoreAndJobMatch": "100294586PrimaryStore11133",
+    "rtiPrimaryJobMatch": "",
+    "rtiPrimaryStoreAndJobMatch": "100294586PrimaryStore",
+    "storeCode": "RTO_0696"
+  },
+  {
+    "standardMatch": "100294586RTO_069611138",
+    "rtiMatch": "100294586RTO_0696",
+    "positionId": "P10029458611138",
+    "standardPrimaryJobMatch": "",
+    "standardPrimaryStoreAndJobMatch": "100294586PrimaryStore11138",
+    "rtiPrimaryJobMatch": "",
+    "rtiPrimaryStoreAndJobMatch": "100294586PrimaryStore",
+    "storeCode": "RTO_0696"
+  },
+  {
+    "standardMatch": "100294586RTO_069611139",
+    "rtiMatch": "100294586RTO_0696",
+    "positionId": "P10029458611139",
+    "standardPrimaryJobMatch": "",
+    "standardPrimaryStoreAndJobMatch": "100294586PrimaryStore11139",
+    "rtiPrimaryJobMatch": "",
+    "rtiPrimaryStoreAndJobMatch": "100294586PrimaryStore",
+    "storeCode": "RTO_0696"
+  }
+]

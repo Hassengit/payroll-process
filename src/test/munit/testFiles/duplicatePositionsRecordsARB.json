@@ -1,0 +1,62 @@
+{
+    "Report_Entry": [
+        {
+            "Worker_Location": "ARB_00201",
+            "All_Positions___Jobs_group": [
+                {
+                    "Company_WID": "c322030c5b5201337a43bafc23117973",
+                    "Company": "ARB USA ARG Resources LLC",
+                    "Location_Code": "ARB_00004",
+                    "Pay_Rate_Type": "Hourly",
+                    "POS_Job_Code": "640213280",
+                    "Primary_Job": "0",
+                    "Company_-_ID": "ARB USA",
+                    "Position_ID": "P-100098273",
+                    "RTI_Department_Number": "4",
+                    "Company_Ref_ID": "ARB_USA_Company",
+                    "Job_Code": "50098"
+                },
+                {
+                    "Company_WID": "c322030c5b5201337a43bafc23117973",
+                    "Company": "ARB USA ARG Resources LLC",
+                    "Location_Code": "ARB_00201",
+                    "Pay_Rate_Type": "Hourly",
+                    "POS_Job_Code": "640213280",
+                    "Primary_Job": "1",
+                    "Company_-_ID": "ARB USA",
+                    "Position_ID": "P1577884",
+                    "RTI_Department_Number": "4",
+                    "Company_Ref_ID": "ARB_USA_Company",
+                    "Job_Code": "50098"
+                },
+                {
+                    "Company_WID": "c322030c5b5201337a43bafc23117973",
+                    "Company": "ARB USA ARG Resources LLC",
+                    "Location_Code": "ARB_00201",
+                    "Pay_Rate_Type": "Hourly",
+                    "POS_Job_Code": "6402132801",
+                    "Primary_Job": "1",
+                    "Company_-_ID": "ARB USA",
+                    "Position_ID": "P1577884",
+                    "RTI_Department_Number": "4",
+                    "Company_Ref_ID": "ARB_USA_Company",
+                    "Job_Code": "50098"
+                },   
+                {
+                    "Company_WID": "c322030c5b5201337a43bafc23117973",
+                    "Company": "ARB USA ARG Resources LLC",
+                    "Location_Code": "ARB_00201",
+                    "Pay_Rate_Type": "Hourly",
+                    "POS_Job_Code": "111640213280",
+                    "Primary_Job": "0",
+                    "Company_-_ID": "ARB USA",
+                    "Position_ID": "P15577884",
+                    "RTI_Department_Number": "3",
+                    "Company_Ref_ID": "ARB_USA_Company",
+                    "Job_Code": "50098"
+                }
+            ],
+            "Team_Member_ID": "1577884"
+        }
+    ]
+}

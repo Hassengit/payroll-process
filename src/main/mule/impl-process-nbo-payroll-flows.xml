@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:isb-workday-payroll-system-api="http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api/current/mule-isb-workday-payroll-system-api.xsd">
+	<sub-flow name="retrieveNboCanadaPayroll_subFlow" doc:id="72f7a40d-6eea-4c2e-8019-7d639d9293a1" >
+		<until-successful maxRetries="${util.retries.count}" doc:name="Until Successful" doc:id="d62722d1-0b20-43c4-a624-9ab6346d8557" millisBetweenRetries="${util.retries.delay}">
+					<http:request method="GET" doc:name="GET Canda Payroll Information from NBO" doc:id="e1fe7b5c-3f41-4898-8587-102b8388057c" config-ref="HTTP_Payroll_POS_SYSTEM_Request_Configuration" responseTimeout="${util.timeout.intervalInMS}" outputMimeType="application/json" path="${secure::source.pos.https.path}">
+					<http:query-params><![CDATA[#[output application/java
+---
+{
+	"source" : "canada",
+	posSystem : vars.processType
+}]]]></http:query-params>
+		</http:request>
+				</until-successful>
+		<ee:transform doc:name="set payrollDetails" doc:id="a5f57fd3-bf7d-460e-b369-a507e4433c10" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="payrollDetails" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	posSystem: 'nbo',
+	posSource: 'canada',
+	payrollStart: payload[0].startDate,
+	payrollEnd: payload[0].endDate,
+	batchId: payload[0].payrollBatchIdentifier
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapNboCanadaPerfectMatches_subFlow" doc:id="1514937f-5974-4834-9673-66340a80f7a9" >
+		<ee:transform doc:name="map NBO Canada perfect matches" doc:id="fb564064-6897-4a18-bc4d-75dc1e4d84a1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+
+fun getId(item) = (
+    item.teamMemberIdentifier default "" ++ item.siteId default "" ++ item.jobCode default ""
+)
+
+var joinData = leftJoin(payload,vars.lookupData, (l) -> getId(l), (r) -> r.standardMatch)
+---
+joinData map ((item, index) -> {
+    "batchId": trim(item.l.batchId),
+    "payrollBatchIdentifier": trim(item.l.payrollBatchIdentifier),
+    "payrollInputIdentifier": trim(item.l.payrollInputIdentifier),
+    "startDate": trim(item.l.startDate),
+    "endDate": trim(item.l.endDate),
+    "teamMemberIdentifier": trim(item.l.teamMemberIdentifier),
+    "positionCode": (if (not (isEmpty(trim(item.l.hours)))) item.r.positionId else "") default "",
+    "siteId": trim(item.l.siteId),
+    "jobCode": trim(item.l.jobCode),
+    "earningCode": trim(item.l.earningCode),
+    "hours": trim(item.l.hours) default "",
+    "amount": trim(item.l.amount) default "",
+    "comments": ""
+}) filter (
+			($.hours !="" and $.hours !=null)
+			or
+			($.amount !="" and $.amount !=null)
+		)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="set vars.overallNboCanPayroll, payload to perfect match Fallouts" doc:id="9be14b61-58e5-462e-b3e5-667ed5ac91fe" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload default [] filter ((isEmpty($.positionCode)) and (not (isEmpty($.hours))))]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="overallNboCanPayroll" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	perfectMatches: payload default [] filter (((not (isEmpty($.positionCode))) and (not (isEmpty($.hours)))) or
+		(not (isEmpty($.amount))))
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapNboCanadaPrimaryStoreAndJobMatches_subFlow" doc:id="a0ea8593-0ce6-4857-aaec-355aedfd16b4" >
+		<ee:transform doc:name="map NBO Canada Primary Store and Job Matches" doc:id="84fa58bf-027f-4c27-962e-c310f0c48332" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+
+fun getId(item) = (
+    item.teamMemberIdentifier default "" ++ "PrimaryStore" ++ item.jobCode default ""
+)
+
+var joinData = leftJoin(payload,vars.lookupData, (l) -> getId(l), (r) -> r.standardPrimaryStoreAndJobMatch)
+---
+joinData map ((item, index) -> {
+    "batchId": trim(item.l.batchId),
+    "payrollBatchIdentifier": trim(item.l.payrollBatchIdentifier),
+    "payrollInputIdentifier": trim(item.l.payrollInputIdentifier),
+    "startDate": trim(item.l.startDate),
+    "endDate": trim(item.l.endDate),
+    "teamMemberIdentifier": trim(item.l.teamMemberIdentifier),
+    "positionCode": (if (not (isEmpty(trim(item.l.hours)))) item.r.positionId else "") default "",
+    "siteId": trim(item.l.siteId),
+    "jobCode": trim(item.l.jobCode),
+    "earningCode": trim(item.l.earningCode),
+    "hours": trim(item.l.hours) default "",
+    "amount": trim(item.l.amount) default "",
+    "comments": "",
+    ("overrideCostCenter": vars.costCenterLookup[?$.storeCode == item.l.siteId].costCenter[0] default "") if ((not (isEmpty(item.r.storeCode))) and item.l.siteId != item.r.storeCode)
+}) filter (
+			($.hours !="" and $.hours !=null)
+			or
+			($.amount !="" and $.amount !=null)
+		)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="set vars.overallNboCanPayroll, payload to store match fallouts" doc:id="6a68b15e-8230-4067-940d-c2d16faddd1d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload default [] filter (isEmpty($.positionCode))]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="overallNboCanPayroll" ><![CDATA[%dw 2.0
+output application/json
+---
+( vars.overallNboCanPayroll default {} )
+++
+{
+	primaryStoreMatches: payload default [] filter (not (isEmpty($.positionCode))) map {
+		"batchId": $.batchId ++"_Adjustments",
+    	"payrollBatchIdentifier": $.payrollBatchIdentifier ++"_Adjustments",
+	    "payrollInputIdentifier": $.payrollInputIdentifier,
+    	"startDate": $.startDate,
+	    "endDate": $.endDate,
+    	"teamMemberIdentifier": $.teamMemberIdentifier,
+	    "positionCode": $.positionCode,
+    	"siteId": $.siteId,
+    	"jobCode": $.jobCode,
+ 	   	"earningCode": $.earningCode,
+    	"hours": $.hours,
+	    "amount": $.amount,
+    	"comments": $.comments,
+	    ("overrideCostCenter": $.overrideCostCenter) if (not (isEmpty($.overrideCostCenter)))
+	}
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapNboCanadaPrimaryJobMatches_subFlow" doc:id="230a1638-4e3e-48e8-beb8-7046ceca0de9" >
+		<ee:transform doc:name="map NBO Canada Primary Job Matches" doc:id="36ce4cb4-9836-4498-add4-8e88159f1279" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+
+fun getId(item) = (
+    item.teamMemberIdentifier default "" ++ "PrimaryJob"
+)
+
+var joinData = leftJoin(payload,vars.lookupData, (l) -> getId(l), (r) -> r.standardPrimaryJobMatch)
+---
+joinData map ((item, index) -> {
+    "batchId": trim(item.l.batchId),
+    "payrollBatchIdentifier": trim(item.l.payrollBatchIdentifier),
+    "payrollInputIdentifier": trim(item.l.payrollInputIdentifier),
+    "startDate": trim(item.l.startDate),
+    "endDate": trim(item.l.endDate),
+    "teamMemberIdentifier": trim(item.l.teamMemberIdentifier),
+    "positionCode": (if (not (isEmpty(trim(item.l.hours)))) item.r.positionId else "") default "",
+    "siteId": trim(item.l.siteId),
+    "jobCode": trim(item.l.jobCode),
+    "earningCode": trim(item.l.earningCode),
+    "hours": trim(item.l.hours) default "",
+    "amount": trim(item.l.amount) default "",
+    "comments": "",
+    ("overrideCostCenter": vars.costCenterLookup[?$.storeCode == item.l.siteId].costCenter[0] default "") if ((not (isEmpty(item.r.storeCode))) and item.l.siteId != item.r.storeCode)
+}) filter (
+			($.hours !="" and $.hours !=null)
+			or
+			($.amount !="" and $.amount !=null)
+		)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="set vars.overallNboCanPayroll, payload to null" doc:id="2ff48774-456c-4329-b396-39c9e3dd8387" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+null]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="overallNboCanPayroll" ><![CDATA[%dw 2.0
+output application/json
+---
+( vars.overallNboCanPayroll default {} )
+++
+{
+	primaryJobMatches: payload default [] filter (not (isEmpty($.positionCode))) map {
+		"batchId": $.batchId ++"_Adjustments",
+    	"payrollBatchIdentifier": $.payrollBatchIdentifier ++"_Adjustments",
+	    "payrollInputIdentifier": $.payrollInputIdentifier,
+    	"startDate": $.startDate,
+	    "endDate": $.endDate,
+    	"teamMemberIdentifier": $.teamMemberIdentifier,
+	    "positionCode": $.positionCode,
+    	"siteId": $.siteId,
+    	"jobCode": $.jobCode,
+ 	   	"earningCode": $.earningCode,
+    	"hours": $.hours,
+	    "amount": $.amount,
+    	"comments": $.comments,
+	    ("overrideCostCenter": $.overrideCostCenter) if (not (isEmpty($.overrideCostCenter)))
+	},
+	fallouts: payload default [] filter (isEmpty($.positionCode))
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapNboCanadaPayrollData_subFlow" doc:id="0022282a-5d04-4eec-8012-1235e345673e" >
+		<flow-ref doc:name="mapNboCanadaPerfectMatches_subFlow" doc:id="e779ee77-2c47-4866-88a7-b2fc42043b22" name="mapNboCanadaPerfectMatches_subFlow"/>
+		<flow-ref doc:name="mapNboCanadaPrimaryStoreAndJobMatches_subFlow" doc:id="e4f02409-33df-443a-bcad-62b038e12193" name="mapNboCanadaPrimaryStoreAndJobMatches_subFlow"/>
+		<flow-ref doc:name="mapNboCanadaPrimaryJobMatches_subFlow" doc:id="c911162a-8ff7-46ff-8294-ad115369c76d" name="mapNboCanadaPrimaryJobMatches_subFlow"/>
+		<ee:transform doc:name="set payload, nboCanAdjustmentsBatch" doc:id="48316e05-f71e-47da-b44b-27daf2c61c40" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+(vars.overallNboCanPayroll.perfectMatches default []) ++
+(vars.overallNboCanPayroll.fallouts default [])
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="nboCanAdjustmentsBatch" ><![CDATA[%dw 2.0
+output application/json
+---
+(vars.overallNboCanPayroll.primaryStoreMatches default []) ++
+(vars.overallNboCanPayroll.primaryJobMatches default [])]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapNboCanadaPosReconEntries_subFlow" doc:id="beadec74-5856-4561-811c-3bac0bb47155" >
+		<ee:transform doc:name="map PosEntries payload" doc:id="f6a1e243-dae7-4641-9814-dab4388b087a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+fun mapPosEntry(payrollEntries, positionMatchType) = payrollEntries map {
+	teamMemberId: $.teamMemberIdentifier,
+	earningCode: $.earningCode,
+	hours: $.hours default "",
+	amount: $.amount default "",
+	units: $.units default "",
+	jobCode: $.jobCode default "",
+	site: $.siteId default "",
+	positionId: $.positionCode default "",
+	positionMatch: positionMatchType,
+	overrideCostCenter: $.overrideCostCenter default "",
+	batchId: $.payrollBatchIdentifier,
+	startDate: $.startDate,
+	endDate: $.endDate,
+	payrollInputId: $.payrollInputIdentifier
+	}
+---
+{
+  "reconEntries": mapPosEntry(vars.overallNboCanPayroll.perfectMatches default [], 'Perfect Match') ++
+  	mapPosEntry(vars.overallNboCanPayroll.primaryStoreMatches default [], 'Partial Match - Job In Primary Store') ++
+  	mapPosEntry(vars.overallNboCanPayroll.primaryJobMatches default [], 'Partial Match - Primary Job') ++
+  	mapPosEntry(vars.overallNboCanPayroll.fallouts default [], 'No Match')
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="sendNboCanadaPosReconEntries_subFlow" doc:id="5c645a02-9f96-43f9-b5c0-fd7098a85cc9" >
+		<flow-ref doc:name="mapNboCanadaPosReconEntries_subFlow" doc:id="75fc819e-8e4b-4050-b31c-1e2da7c3fb10" name="mapNboCanadaPosReconEntries_subFlow"/>
+		<http:request method="POST" doc:name="POST NBO Canada Recon Entries to POS Payroll System API" doc:id="c05dd350-3b34-464f-991a-2cacedaddeee" config-ref="HTTP_Payroll_POS_SYSTEM_Request_Configuration" sendCorrelationId="ALWAYS" path="${secure::source.pos.https.recon.path}">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"payrollEnd" : vars.payrollDetails.payrollEnd,
+	"payrollStart" : vars.payrollDetails.payrollStart,
+	"source" : vars.payrollDetails.posSource,
+	"batchId" : vars.payrollDetails.batchId,
+	"posSystem" : vars.payrollDetails.posSystem
+}]]]></http:query-params>
+		</http:request>
+	</sub-flow>
+	<sub-flow name="sendNboCanadaPayrollToWorkday_subFlow" doc:id="719deea6-597a-4921-88ef-cfdc9317f8c4" >
+		<choice doc:name="Choice" doc:id="224eaa55-edec-4b25-af40-003efb077faa" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<flow-ref doc:name="sendPayrollDataToWorkday_subFlow - NBO Canada Primary" doc:id="95d50b2f-0f5d-425a-97ee-7bb4560fdb23" name="sendPayrollDataToWorkday_subFlow" target="nboCanNormalBatchResponse"/>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="set nboCanNormalBatchResponse" doc:id="b06e22f6-6c3c-4580-8179-c35d1d2c3951" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="nboCanNormalBatchResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "message": "There were no records to send for the primary batch."
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="set payload to nboCanAdjustmentsbatch" doc:id="ad325e39-6ab9-4b1c-ad88-e67fb00a725f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+vars.nboCanAdjustmentsBatch]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="46c03521-2526-4879-8ae9-63530d1c0826" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<flow-ref doc:name="sendPayrollDataToWorkday_subFlow - NBO Canada Adjustments" doc:id="647989d3-bf87-4d1d-98e1-5d381e9872f7" name="sendPayrollDataToWorkday_subFlow" target="nboCanAdjustmentsBatchResponse"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="set nboCanAdjustmentsBatchResponse" doc:id="1b3aaa37-aa2e-4a5b-847a-4ecffb1af1af" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="nboCanAdjustmentsBatchResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "message": "There were no records to send for the adjustments batch."
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="set final response" doc:id="cd1d1078-fba3-4b0f-a3bd-4c5d7d869452" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	primaryBatch: vars.nboCanNormalBatchResponse.message default "",
+	adjustmentsBatch: vars.nboCanAdjustmentsBatchResponse.message default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<flow name="impl-process-nbo-payroll-flows" doc:id="bae2d900-47bd-4b27-a027-11f4cc55d979" maxConcurrency="1">
+	    <flow-ref doc:name="Start Log" doc:id="5fbed9b8-6722-4f57-a01b-278cb586edf0" name="sf-start-log"/>
+		<set-variable value="#[attributes.queryParams['source']]" doc:name="Set Source Query Parameters" doc:id="f93a7343-ecbf-4c0b-84b5-52c58f28249c" variableName="source"/>
+		<choice doc:name="Choice" doc:id="7c4adf88-937e-4ed0-9bb3-4fb72dcbbdbe" >
+			<when expression='#[vars.source == "canada"]'>
+				<flow-ref doc:name="retrieveNboCanadaPayroll_subFlow" doc:id="7757101b-af9e-463e-ad27-4e288406e3a6" name="retrieveNboCanadaPayroll_subFlow" />
+				<ee:transform doc:name="Lookup Variable" doc:id="ca44d552-eb58-4620-9e26-049d7eaeec01">
+			<ee:message>
+			</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="lookupKey" ><![CDATA["BWWCAN"]]></ee:set-variable>
+					</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Get Lookup Data" doc:id="7b86a20e-f2f2-4133-b49b-6c86206a18cf" name="cache-positions-lookup-data-flow" target="lookupData" targetValue="#[payload]"/>
+		<flow-ref doc:name="getCostCenterInformation_subFlow" doc:id="ac284e1e-dd19-4967-9459-ae6ba6a45d14" name="getCostCenterInformation_subFlow" target="costCenterLookup"/>
+				<flow-ref doc:name="mapNboCanadaPayrollData_subFlow" doc:id="b9bdcc1a-9268-4564-af39-0b4928ba1e6d" name="mapNboCanadaPayrollData_subFlow"/>
+				<flow-ref doc:name="sendNboCanadaPayrollToWorkday_subFlow" doc:id="0a1a1499-ec8e-4c88-b80b-74c8ebb27e84" name="sendNboCanadaPayrollToWorkday_subFlow"/>
+				<logger level="INFO" doc:name="In progress Logger" doc:id="3086a057-5fb3-4340-8c2d-fe99a17121bd" category="${logger.category}" message="#[payload]"/>
+				<flow-ref doc:name="sendNboCanadaPosReconEntries_subFlow" doc:id="573eb050-579b-4d85-b1ca-98720c218e61" name="sendNboCanadaPosReconEntries_subFlow" target="posReconEntriesResponse"/>
+				
+			</when>
+			<otherwise >
+				<until-successful maxRetries="${util.retries.count}" doc:name="Until Successful" doc:id="a4ae0b97-7372-4866-ba37-ae0e1f523d0f" millisBetweenRetries="${util.retries.delay}">
+					<http:request method="GET" doc:name="GET Biweekly Payroll Information from NBO" doc:id="c088f89c-53c4-4bf2-b694-58a6dd4d10ff" config-ref="HTTP_Payroll_POS_SYSTEM_Request_Configuration" outputMimeType="application/json" responseTimeout="${util.timeout.intervalInMS}" path="${secure::source.pos.https.path}">
+					<http:query-params><![CDATA[#[output application/java
+---
+{
+	"source" : vars.source,
+	posSystem : vars.processType
+}]]]></http:query-params>
+				</http:request>
+				</until-successful>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="bdb52e74-ac73-485f-a241-372de34f061d" message='#["Completed Payroll processing data from NBO for source: " ++ vars.source as String default ""]' category="${logger.category}"/>
+		<flow-ref doc:name="End Log" doc:id="cea70eaa-d637-49fd-b527-fb8842a3929d" name="sf-end-log"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fc5e35a9-fe00-47bd-bb64-67fddcdd3c56" >
+				<ee:transform doc:name="Transform Message" doc:id="228906bd-cf20-40ea-af9c-1a8c5f774c5b" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	code: error.errorType,
+	message: error.description,
+	transactionId: correlationId
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="ERROR" doc:name="Error Logger" doc:id="2d6da3eb-0218-433a-a1fc-8e365c93e293" message="#[payload]" category="${logger.category}"/>
+                <flow-ref doc:name="Error Log" doc:id="35592308-59ae-4d99-885c-dce205a2eaf1" name="sf-error-log"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

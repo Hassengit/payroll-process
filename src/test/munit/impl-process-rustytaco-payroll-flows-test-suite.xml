@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="impl-process-rustytaco-payroll-flows-test-suite.xml" />
+	<munit:test name="impl-process-rustytaco-payroll-flows_Test" doc:id="2ab92b15-9896-4e16-be37-fee2afe5151b" description="This test validates the orchestration of payroll processes normally without any issues">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when Start Log" doc:id="8099178b-e18d-4794-8727-6589743457d2" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Start Log" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when GET Payroll information from Rusty Taco" doc:id="c4c1567d-57bf-41fe-85c1-9012f67ab02c" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="retrieveRustyTacoPayroll_subFlow" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayroll.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					<munit-tools:variables >
+						<munit-tools:variable key="payrollDetails" value="#[read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollDetails.json'), &quot;application/json&quot;)]" mediaType="application/java" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when Get LookupData" doc:id="277bad99-0100-4115-817e-01c969f74aac" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Get Lookup Data" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="lookupData" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPositions.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when  - getCostCenterInformation_subFlow" doc:id="4dd8c00f-7bd7-435e-9879-48358e03a491" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="getCostCenterInformation_subFlow" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="costCenterLookup" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoCostCenterLookup.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:spy doc:name="Spy before mapRustyTacoPayrollData_subFlow" doc:id="e36fc151-5e8b-4002-81c6-d007f83fd968" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="mapRustyTacoPayrollData_subFlow" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<munit-tools:assert-that doc:name="Assert that payload is set as expected " doc:id="bcfdbe20-2baf-4260-bd9c-ec445157702e" expression="#[payload]" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoPayroll.json', 'application/json'))]" message="The payload is not set correctly prior to mapping the rusty taco payroll."/>
+				</munit-tools:before-call>
+			</munit-tools:spy>
+			<munit-tools:mock-when doc:name="Mock when mapRustyTacoPayrollData_subFlow" doc:id="279fc7ac-0c62-4ffe-9a2a-9e388ecc249c" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="mapRustyTacoPayrollData_subFlow" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollFinal.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:spy doc:name="Spy before POST Payroll to Workday" doc:id="02449178-4bda-4fba-ab2f-6663fbeb4b8a" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="POST Payroll Data to Workday" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<munit-tools:assert-that doc:name="Assert that" doc:id="1f003164-0369-4762-91fa-59918ce9395e" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoPayrollFinal.json', 'application/json'))]" expression="#[payload]" message="The payload is not set correctly prior to posting the data to workday."/>
+				</munit-tools:before-call>
+			</munit-tools:spy>
+			<munit-tools:mock-when doc:name="Mock when flow ref sendRustyTacoPayrollDataToWorkday_subFlow" doc:id="fa280e5e-45e7-4d50-b770-629df8b39e16" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="sendRustyTacoPayrollDataToWorkday_subFlow" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/workdayPayrollResponse.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when sendPosReconEntries_subFlow" doc:id="bda155ba-2416-4b9a-9fee-be4c00deb1e3" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="sendRustyTacoPosReconEntries_subFlow" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="posReconResponse" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/posReconEntriesResponse.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:spy doc:name="Spy before End log" doc:id="fb29888f-0967-4c41-a3ca-38cae68925dd" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="End Log" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<munit-tools:assert-that doc:name="Assert that" doc:id="f6ae81fb-1b73-4005-b6e1-a53fc0802ed8" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/workdayPayrollResponse.json', 'application/json'))]" expression="#[payload]" message="The payload before the end log flow ref is not set as expected. try again"/>
+				</munit-tools:before-call>
+			</munit-tools:spy>
+			<munit-tools:mock-when doc:name="Mock when End Log" doc:id="4f4b150b-a337-4b44-9387-0fe547928097" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="End Log" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#['End Log Called']" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when Error Log" doc:id="f241b3e7-bf0e-409d-9460-9eba3c1b4df7" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Error Log" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#['Error Log Called']" mediaType="application/java" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="9332b799-409c-4601-bd71-7736c53d10d4" >
+				<munit:attributes value="#[ {method: 'GET'}]" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to impl-process-rustytaco-payroll-flows" doc:id="a5f94bd1-eb60-45ad-afa3-c3f783446089" name="impl-process-rustytaco-payroll-flows"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals doc:name="Assert equals payload" doc:id="54f03446-5683-45fb-9ff5-f7236aa488e5" actual="#[payload]" expected="#['End Log Called']" message="The payload does not match what is expected. "/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="mapRustyTacoPerfectPositionMatches_subFlow_Test" doc:id="ab26a2bb-4fcc-4bc7-a2dd-a8876dc7eb13" description="This test validates the positionIds are mapped as expected, and that they are stored into the overallRtacoPayroll variable. The objects that have a non-empty hours value and do not have a matching positionId are set as the payload. This test also validates that any objects that are empty for hours and amount are excluded from the outputs.">
+		<munit:behavior >
+			<munit-tools:spy doc:name="Spy" doc:id="7cbad982-de25-434e-bab6-18a718f10134" processor="ee:transform">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="map RustyTaco for Perfect matches" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="map RustyTaco for Perfect matches" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="map RustyTaco for Perfect matches" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="map RustyTaco for Perfect matches" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="map RustyTaco for Perfect matches" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="map RustyTaco for Perfect matches" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="map RustyTaco for Perfect matches" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="map RustyTaco for Perfect matches" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="map RustyTaco for Perfect matches" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="map RustyTaco for Perfect matches" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:after-call >
+					<munit-tools:assert-that doc:name="Assert that" doc:id="8d2b9087-37b1-426b-be7c-5cf7f67c910d" expression="#[payload]" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoInitialPayrollMap.json', 'application/json'))]"/>
+				</munit-tools:after-call>
+			</munit-tools:spy>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="edd5f8dd-3f70-4c12-8083-b06aed1516fc" >
+				<munit:payload value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayroll.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				<munit:variables >
+					<munit:variable key="lookupData" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPositions.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				</munit:variables>
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to mapRustyTacoPerfectPositionMatches_subFlow" doc:id="6622a0c4-3f48-45e1-bf42-91ab3e46339f" name="mapRustyTacoPerfectPositionMatches_subFlow"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert that overallRtacoPayroll is set as expected" doc:id="58f162ed-eaea-4421-a304-bd6963092cb7" expression="#[vars.overallRtacoPayroll]" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoPayrollPerfectMatch.json', 'application/json'))]" message=" The variable overallRtacoPayroll is NOT set as expected!!"/>
+			<munit-tools:assert-that doc:name="Assert that payload matches the fallouts expected" doc:id="135d674f-d2a8-47d7-bde4-ffc024bc0e79" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoPayrollPerfectMatchFallouts.json', 'application/json'))]" expression="#[payload]" message="The payload DOES NOT match the fallouts expected!!"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="mapRustyTacoPrimaryStoreAndJobMatches_subFlow_Test" doc:id="7f6d77c3-f576-4148-8d5a-aa420e1abd14" description="This test validates the positionIds are mapped as expected, and that they are stored into the overallRtacoPayroll variable, along with the previous data in that variable.. The values that do not have a matching positionId are set as the payload.">
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="bb6c5d1a-e8a5-4ea9-be8d-a4c00a8cfdb9" >
+				<munit:payload value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollPerfectMatchFallouts.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				<munit:variables >
+					<munit:variable key="lookupData" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPositions.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					<munit:variable key="costCenterLookup" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoCostCenterLookup.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					<munit:variable key="overallRtacoPayroll" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollPerfectMatch.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				</munit:variables>
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to mapRustyTacoPrimaryStoreAndJobMatches_subFlow" doc:id="19deddaf-6a01-4dc1-b0a6-1192ffe4e96c" name="mapRustyTacoPrimaryStoreAndJobMatches_subFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that overallRtacoPayroll is set as expected" doc:id="0e2344ca-a1ad-47ce-8407-754b4466e9d9" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoPayrollPrimaryStoreMatch.json', 'application/json'))]" expression="#[vars.overallRtacoPayroll]" message=" The variable overallRtacoPayroll is NOT set as expected!!"/>
+			<munit-tools:assert-that doc:name="Assert that payload matches the fallouts expected" doc:id="b69d8c90-856b-400c-b5f7-cbdd0ad2bacc" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoPayrollPrimaryStoreFallouts.json', 'application/json'))]" expression="#[payload]" message="The payload DOES NOT match the fallouts expected!!"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="impl-process-rustytaco-payroll-flows-test-suite-mapRustyTacoPrimaryJobMatch_subFlowTest" doc:id="3bc5543c-4936-41ea-b894-cc8dc148c360" description="Test">
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="0074e934-9dec-4823-ac51-ea72e9f9690b" >
+				<munit:payload value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollPrimaryStoreFallouts.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				<munit:variables >
+					<munit:variable key="lookupData" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPositions.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					<munit:variable key="costCenterLookup" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoCostCenterLookup.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					<munit:variable key="overallRtacoPayroll" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollPrimaryStoreMatch.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				</munit:variables>
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to mapRustyTacoPrimaryJobMatch_subFlow" doc:id="53c8852b-87dc-4313-b48f-a0683344710b" name="mapRustyTacoPrimaryJobMatch_subFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that overallRtacoPayroll is set as expected" doc:id="92bade10-f67c-48fc-96b3-fb43267752d5" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoPayrollPrimaryJobMatch.json', 'application/json'))]" expression="#[vars.overallRtacoPayroll]" message=" The variable overallRtacoPayroll is NOT set as expected!!"/>
+			<munit-tools:assert-that doc:name="Assert that payload is null" doc:id="58357b35-8fa8-4813-9922-3f3851da3e87" expression="#[payload]" is="#[MunitTools::nullValue()]" message="The payload is not null!"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="mapRustyTacoPayrollData_subFlowTest" doc:id="feb49770-4597-4375-80b7-1dbc6a0c9b7f" description="This test validates that the final payload of all mappings is as expected and the correct mimeType. this also asserts the adjustments batch is set as expected">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="3b38d21f-0559-4e3c-9ff6-14757222b40b" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="mapRustyTacoPerfectPositionMatches_subFlow" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollPerfectMatchFallouts.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					<munit-tools:variables >
+						<munit-tools:variable key="overallRtacoPayroll" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollPerfectMatch.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="21f34b63-10b5-42a8-b7bd-cfdfa938e274" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="mapRustyTacoPrimaryStoreAndJobMatches_subFlow" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollPrimaryStoreFallouts.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					<munit-tools:variables >
+						<munit-tools:variable key="overallRtacoPayroll" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollPrimaryStoreMatch.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="6e2d830b-88e5-4b18-91d9-e4fc48e4b147" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="mapRustyTacoPrimaryJobMatch_subFlow" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[null]" />
+					<munit-tools:variables >
+						<munit-tools:variable key="overallRtacoPayroll" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollPrimaryJobMatch.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to mapRustyTacoPayrollData_subFlow" doc:id="d1f4b8b1-d29b-4984-b2d7-206bfadd4426" name="mapRustyTacoPayrollData_subFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert payload mimeType is application/json" doc:id="735a8d09-d835-4c7b-9841-83e8b5ab6c18" actual="#[payload.^mimeType]" expected="#['application/json']" message="The payload mimeType is not application/json! Get it together!!"/>
+			<munit-tools:assert-that doc:name="Assert that final payload matches the expected." doc:id="e596585b-a833-4867-a482-5f5f548f862c" expression="#[payload]" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoPayrollMapped.json', 'application/json'))]" message="The payload is not set as expected. Update your code, or this test!!"/>
+			<munit-tools:assert-equals doc:name="Assert equals rtacoAdjustmentsBatch mimetype is application/json" doc:id="4aed4ae0-4b8f-4f7f-a67c-eacbe3b44ce1" actual="#[vars.rtacoAdjustmentsBatch.^mimeType]" expected="#['application/json']" message="The rtacoAdjustmentsBatch mimeType is not application/json! Get it together!!"/>
+			<munit-tools:assert-that doc:name="Assert that" doc:id="211c902b-4cd8-4ee7-a8e4-1b8b32ee615e" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoAdjustments.json', 'application/json'))]" expression="#[vars.rtacoAdjustmentsBatch]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="mapRustyTacoPosReconEntries_subFlowTest" doc:id="efa87b4b-669b-41f1-a26f-bf08bfd7ebf7" description="This test validates the Recon Entries mapping works as expected">
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="10b6e222-56a0-4b4b-b9fe-47660aaf18f9" >
+				<munit:variables >
+					<munit:variable key="overallRtacoPayroll" value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollPrimaryJobMatch.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				</munit:variables>
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to mapRustyTacoPosReconEntries_subFlow" doc:id="98f19e85-53d0-4e9d-8cf5-19894c808f94" name="mapRustyTacoPosReconEntries_subFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that pos entry payload is mapped as expected" doc:id="d9d4a323-fabb-45e2-a5a5-d7eb4e613052" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoReconEntries.json', 'application/json'))]" message="Heyyyy now, the payload after your payroll recon entry mapping  is not good, figure it out!" expression="#[payload]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="retrieveRustyTacoPayroll_subFlowTest" doc:id="a2402ab3-489b-4e44-86e2-65a676ebef45">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when GET Payroll Information from Rusty Taco" doc:id="62e0be47-1f28-40a1-941b-4ff320a13beb" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="GET Payroll Information from Rusty Taco" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoPayroll.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to retrieveRustyTacoPayroll_subFlow" doc:id="d64bc1d9-c5b3-43bf-8908-1110c5bd0fe2" name="retrieveRustyTacoPayroll_subFlow"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals doc:name="Assert equals payload mimeType is application/json" doc:id="76bb9293-a87c-4a5a-ac7a-5b38d543ae07" actual="#[payload.^mimeType]" expected="#['application/json']" message="The payload mimeType is not application/json!!"/>
+			<munit-tools:assert-that doc:name="Assert that payload is as expected" doc:id="4e6a593c-84fa-41f8-a033-8c78d6bf83e7" expression="#[payload]" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoPayroll.json', 'application/json'))]" message="The payload is definitely not right here, please figure this one out :)"/>
+			<munit-tools:assert-that doc:name="Assert that payrollDetails is set as expected" doc:id="70a70536-87e3-46ed-9b39-d61db3ce5035" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/rustyTacoPayrollDetails.json', 'application/json'))]" message="The variable payrollDetails is not setup correct, try again." expression="#[vars.payrollDetails]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="sendRustyTacoPosReconEntries_subFlowTest" doc:id="5d6d1440-2655-4f05-9e42-9a89ea0da796" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when mapRustyTacoPosReconEntries_subFlow" doc:id="87846686-78e2-4398-837e-e3fdc929ca75" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="mapRustyTacoPosReconEntries_subFlow" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/rustyTacoReconEntries.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when HTTP REQUEST Post Recon Entries to POS Payroll System API" doc:id="5c5ec3fe-0972-4092-80c7-2c3bd55ec028" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="POST Recon Entries to POS Payroll System API" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- read(MunitTools::getResourceAsString('testFiles/posReconEntriesResponse.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="5340f6e3-1c0c-4987-bb17-2e1d38c80324" >
+				<munit:variables >
+					<munit:variable key="payrollDetails" value="#[read(MunitTools::getResourceAsString('testFiles/rustyTacoPayrollDetails.json'), &quot;application/json&quot;)]" mediaType="application/json" />
+				</munit:variables>
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to sendRustyTacoPosReconEntries_subFlow" doc:id="6c5f05d7-e97c-4a09-9087-b36663cff2e3" name="sendRustyTacoPosReconEntries_subFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals  payload mimeType is application/json" doc:id="1042c5cd-cb9d-4685-90ae-da2d4c0fcc89" actual="#[payload.^mimeType]" expected="#['application/json']" message="The payload mimeType is NOT application/json. Please check your code. "/>
+			<munit-tools:assert-that doc:name="Assert that payload matches what is expected" doc:id="6af35b80-a1a5-4c94-bedc-7de90128085a" is="#[MunitTools::equalTo(readUrl('classpath://testFiles/posReconEntriesResponse.json', 'application/json'))]" expression="#[payload]" message="This is not good, something went wrong with the payload. it is not what it is supposed to be."/>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:isb-workday-payroll-system-api="http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api/current/mule-isb-workday-payroll-system-api.xsd">
+	<sub-flow name="retrieveRustyTacoPayroll_subFlow" doc:id="3e388564-3edf-438d-8f30-800566495312" >
+		<until-successful maxRetries="${util.retries.count}" doc:name="Until Successful" doc:id="2ed4e2f2-5193-4992-a81b-a5bc0d14cb10" millisBetweenRetries="${util.retries.delay}">
+			<http:request method="GET" doc:name="GET Payroll Information from Rusty Taco" doc:id="e1fe7b5c-3f41-4898-8587-102b8388057c" config-ref="HTTP_Payroll_POS_SYSTEM_Request_Configuration" responseTimeout="${util.timeout.intervalInMS}" outputMimeType="application/json" path="${secure::source.pos.https.path}">
+				<http:query-params><![CDATA[#[output application/java
+---
+{
+	posSystem : vars.processType
+}]]]></http:query-params>
+		</http:request>
+		</until-successful>
+		<ee:transform doc:name="set payrollDetails" doc:id="200141c7-a0e1-4fb7-b487-3e1364ea2c7f" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="payrollDetails" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	posSystem: 'rustytaco',
+	payrollStart: payload[0].startDate,
+	payrollEnd: payload[0].endDate,
+	batchId: payload[0].payrollBatchIdentifier
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapRustyTacoPerfectPositionMatches_subFlow" doc:id="9a69821a-5e0c-4d70-b970-cdf2004bdd66" >
+		<ee:transform doc:name="map RustyTaco for Perfect matches" doc:id="d0510350-b76d-4d57-8d7e-f501c076b7a6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+
+fun getId(item) = (
+    item.teamMemberIdentifier default "" ++ item.siteId default "" ++ item.jobCode default ""
+)
+
+var joinData = leftJoin(payload,vars.lookupData, (l) -> getId(l), (r) -> r.standardMatch)
+
+---
+joinData map ((item, index) -> {
+    "batchId": trim(item.l.batchId),
+    "payrollBatchIdentifier": trim(item.l.payrollBatchIdentifier),
+    "payrollInputIdentifier": trim(item.l.payrollInputIdentifier),
+    "startDate": trim(item.l.startDate),
+    "endDate": trim(item.l.endDate),
+    "teamMemberIdentifier": trim(item.l.teamMemberIdentifier),
+    "positionCode": (if (not (isEmpty(trim(item.l.hours)))) item.r.positionId else "") default "",
+    "siteId": trim(item.l.siteId),
+    "jobCode": trim(item.l.jobCode),
+    "earningCode": trim(item.l.earningCode),
+    "hours": trim(item.l.hours) default "",
+    "amount": trim(item.l.amount) default "",
+    "comments": trim(item.l.comments)
+}) filter (
+			($.hours !="" and $.hours !=null)
+			or
+			($.amount !="" and $.amount !=null)
+		)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="set vars.overallRtacoPayroll, payload to perfect match Fallouts" doc:id="5a8f77e1-e273-4684-a527-6918773b4280" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload default [] filter ((isEmpty($.positionCode)) and (not (isEmpty($.hours))))]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="overallRtacoPayroll" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	perfectMatches: payload default [] filter (((not (isEmpty($.positionCode))) and (not (isEmpty($.hours)))) or
+		(not (isEmpty($.amount))))
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapRustyTacoPrimaryStoreAndJobMatches_subFlow" doc:id="c075453f-93c0-4351-a728-d8bdc087ab45" >
+		<ee:transform doc:name="map Rusty Taco primary store and job matches" doc:id="33775aa0-5b07-47fa-b663-d31f8dcdf618" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+
+fun getId(item) = (
+    item.teamMemberIdentifier default "" ++ "PrimaryStore" ++ item.jobCode default ""
+)
+
+var joinData = leftJoin(payload,vars.lookupData, (l) -> getId(l), (r) -> r.standardPrimaryStoreAndJobMatch)
+
+---
+joinData map ((item, index) -> {
+    "batchId": trim(item.l.batchId),
+    "payrollBatchIdentifier": trim(item.l.payrollBatchIdentifier),
+    "payrollInputIdentifier": trim(item.l.payrollInputIdentifier),
+    "startDate": trim(item.l.startDate),
+    "endDate": trim(item.l.endDate),
+    "teamMemberIdentifier": trim(item.l.teamMemberIdentifier),
+    "positionCode": (if (not (isEmpty(trim(item.l.hours)))) item.r.positionId else "") default "",
+    "siteId": trim(item.l.siteId),
+    "jobCode": trim(item.l.jobCode),
+    "earningCode": trim(item.l.earningCode),
+    "hours": trim(item.l.hours) default "",
+    "amount": trim(item.l.amount) default "",
+    "comments": trim(item.l.comments),
+    ("overrideCostCenter": vars.costCenterLookup[?$.storeCode == item.l.siteId].costCenter[0] default "") if ((not (isEmpty(item.r.storeCode))) and item.l.siteId != item.r.storeCode)
+}) filter (
+			($.hours !="" and $.hours !=null)
+			or
+			($.amount !="" and $.amount !=null)
+		)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="set vars.overallRtacoPayroll, payload to store match fallouts" doc:id="f4d0df67-cdae-4457-a4c0-6fb71ea6bcf5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload default [] filter (isEmpty($.positionCode))]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="overallRtacoPayroll" ><![CDATA[%dw 2.0
+output application/json
+---
+( vars.overallRtacoPayroll default {} )
+++
+{
+	primaryStoreMatches: payload default [] filter (not (isEmpty($.positionCode))) map {
+		"batchId": $.batchId ++"_Adjustments",
+    	"payrollBatchIdentifier": $.payrollBatchIdentifier ++"_Adjustments",
+	    "payrollInputIdentifier": $.payrollInputIdentifier,
+    	"startDate": $.startDate,
+	    "endDate": $.endDate,
+    	"teamMemberIdentifier": $.teamMemberIdentifier,
+	    "positionCode": $.positionCode,
+    	"siteId": $.siteId,
+    	"jobCode": $.jobCode,
+ 	   	"earningCode": $.earningCode,
+    	"hours": $.hours,
+	    "amount": $.amount,
+    	"comments": $.comments,
+	    ("overrideCostCenter": $.overrideCostCenter) if (not (isEmpty($.overrideCostCenter)))
+	}
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapRustyTacoPrimaryJobMatch_subFlow" doc:id="5738d85c-4509-4bc7-9449-c1aaee04e669" >
+		<ee:transform doc:name="map Rusty Taco primary job match" doc:id="c2c8d4e9-f858-4274-8191-cc7acd1866b0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+
+fun getId(item) = (
+    item.teamMemberIdentifier default "" ++ "PrimaryJob"
+)
+
+var joinData = leftJoin(payload,vars.lookupData, (l) -> getId(l), (r) -> r.standardPrimaryJobMatch)
+
+---
+joinData map ((item, index) -> {
+    "batchId": trim(item.l.batchId),
+    "payrollBatchIdentifier": trim(item.l.payrollBatchIdentifier),
+    "payrollInputIdentifier": trim(item.l.payrollInputIdentifier),
+    "startDate": trim(item.l.startDate),
+    "endDate": trim(item.l.endDate),
+    "teamMemberIdentifier": trim(item.l.teamMemberIdentifier),
+    "positionCode": (if (not (isEmpty(trim(item.l.hours)))) item.r.positionId else "") default "",
+    "siteId": trim(item.l.siteId),
+    "jobCode": trim(item.l.jobCode),
+    "earningCode": trim(item.l.earningCode),
+    "hours": trim(item.l.hours) default "",
+    "amount": trim(item.l.amount) default "",
+    "comments": trim(item.l.comments),
+    ("overrideCostCenter": vars.costCenterLookup[?$.storeCode == item.l.siteId].costCenter[0] default "") if ((not (isEmpty(item.r.storeCode))) and item.l.siteId != item.r.storeCode)
+}) filter (
+			($.hours !="" and $.hours !=null)
+			or
+			($.amount !="" and $.amount !=null)
+		)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="set vars.overallRtacoPayroll, null payload" doc:id="f91f828e-9561-4e8f-b592-c5d3b2c54bc3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+null]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="overallRtacoPayroll" ><![CDATA[%dw 2.0
+output application/json
+---
+( vars.overallRtacoPayroll default {} )
+++
+{
+	primaryJobMatches: payload default [] filter (not (isEmpty($.positionCode))) map {
+		"batchId": $.batchId ++"_Adjustments",
+    	"payrollBatchIdentifier": $.payrollBatchIdentifier ++"_Adjustments",
+	    "payrollInputIdentifier": $.payrollInputIdentifier,
+    	"startDate": $.startDate,
+	    "endDate": $.endDate,
+    	"teamMemberIdentifier": $.teamMemberIdentifier,
+	    "positionCode": $.positionCode,
+    	"siteId": $.siteId,
+    	"jobCode": $.jobCode,
+ 	   	"earningCode": $.earningCode,
+    	"hours": $.hours,
+	    "amount": $.amount,
+    	"comments": $.comments,
+	    ("overrideCostCenter": $.overrideCostCenter) if (not (isEmpty($.overrideCostCenter)))
+	},
+	fallouts: payload default [] filter (isEmpty($.positionCode))
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapRustyTacoPayrollData_subFlow" doc:id="033bbeec-7d09-477b-90f3-355c91a7a3c5" >
+		<flow-ref doc:name="mapRustyTacoPerfectPositionMatches_subFlow" doc:id="75060afc-4558-4907-b195-8fa7807e8b9c" name="mapRustyTacoPerfectPositionMatches_subFlow"/>
+		<flow-ref doc:name="mapRustyTacoPrimaryStoreAndJobMatches_subFlow" doc:id="1aa4c0ed-6bd3-4121-9347-000e8a868bc3" name="mapRustyTacoPrimaryStoreAndJobMatches_subFlow"/>
+		<flow-ref doc:name="mapRustyTacoPrimaryJobMatch_subFlow" doc:id="e12d2a42-df64-4f78-8645-b26088fb76f1" name="mapRustyTacoPrimaryJobMatch_subFlow"/>
+		<ee:transform doc:name="set payload, rtacoAdjustmentsbatch" doc:id="4febeb2b-15e7-4806-9c3e-0b506e1ab61c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+(vars.overallRtacoPayroll.perfectMatches default []) ++
+(vars.overallRtacoPayroll.fallouts default [])
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="rtacoAdjustmentsBatch" ><![CDATA[%dw 2.0
+output application/json
+---
+(vars.overallRtacoPayroll.primaryStoreMatches default []) ++
+(vars.overallRtacoPayroll.primaryJobMatches default [])]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapRustyTacoPosReconEntries_subFlow" doc:id="a0f3874a-d6d9-48de-af32-a987e50d0556" >
+		<ee:transform doc:name="map PosEntries payload" doc:id="17422537-6ebe-4ed2-a724-9ab68bf5a7de" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+fun mapPosEntry(payrollEntries, positionMatchType) = payrollEntries map {
+	teamMemberId: $.teamMemberIdentifier,
+	earningCode: $.earningCode,
+	hours: $.hours default "",
+	amount: $.amount default "",
+	units: $.units default "",
+	jobCode: $.jobCode default "",
+	site: $.siteId default "",
+	positionId: $.positionCode default "",
+	positionMatch: positionMatchType,
+	overrideCostCenter: $.overrideCostCenter default "",
+	batchId: $.payrollBatchIdentifier,
+	startDate: $.startDate,
+	endDate: $.endDate,
+	payrollInputId: $.payrollInputIdentifier
+	}
+---
+{
+  "reconEntries": mapPosEntry(vars.overallRtacoPayroll.perfectMatches default [], 'Perfect Match') ++
+  	mapPosEntry(vars.overallRtacoPayroll.primaryStoreMatches default [], 'Partial Match - Job In Primary Store') ++
+  	mapPosEntry(vars.overallRtacoPayroll.primaryJobMatches default [], 'Partial Match - Primary Job') ++
+  	mapPosEntry(vars.overallRtacoPayroll.fallouts default [], 'No Match')
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="sendRustyTacoPosReconEntries_subFlow" doc:id="b4fca2df-2890-4ae3-893e-47c9c1e196fc" >
+		<flow-ref doc:name="mapRustyTacoPosReconEntries_subFlow" doc:id="f52e4ca3-8336-4e5e-8f67-fe6e04a1162b" name="mapRustyTacoPosReconEntries_subFlow"/>
+		<http:request method="POST" doc:name="POST Recon Entries to POS Payroll System API" doc:id="f182acfa-a1b6-42e8-a6a5-22346bf7e7db" config-ref="HTTP_Payroll_POS_SYSTEM_Request_Configuration" sendCorrelationId="ALWAYS" path="${secure::source.pos.https.recon.path}">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"payrollEnd" : vars.payrollDetails.payrollEnd,
+	"payrollStart" : vars.payrollDetails.payrollStart,
+	"batchId" : vars.payrollDetails.batchId,
+	"posSystem" : vars.payrollDetails.posSystem
+}]]]></http:query-params>
+		</http:request>
+	</sub-flow>
+	<sub-flow name="sendRustyTacoPayrollDataToWorkday_subFlow" doc:id="f7275d4e-4136-4a13-8531-2d71b55fcfc2" >
+		<choice doc:name="Choice" doc:id="ea4c9211-ed0a-4bee-878c-45472df87eb6" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<flow-ref doc:name="sendPayrollDataToWorkday_subFlow - RTACO Primary" doc:id="71ed5925-1766-4b8b-b9b0-02eec70f6801" name="sendPayrollDataToWorkday_subFlow" target="rtacoNormalBatchResponse" />
+			</when>
+			<otherwise >
+				<ee:transform doc:name="set rtacoNormalBatchResponse" doc:id="36204d1e-a20d-446a-b641-069f4693f848" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="rtacoNormalBatchResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "message": "There were no records to send for the primary batch."
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="set payload to rtacoAdjustmentsBatch" doc:id="21a71e15-71b4-4489-abea-a72757c50b45" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.rtacoAdjustmentsBatch]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="95a8ac5a-340c-49ed-af68-d877830c67d2" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<flow-ref doc:name="sendPayrollDataToWorkday_subFlow - RTACO Adjustments" doc:id="19319797-96c2-4860-b87d-be0597118f55" name="sendPayrollDataToWorkday_subFlow" target="rtacoAdjustmentsBatchResponse" />
+			</when>
+			<otherwise >
+				<ee:transform doc:name="set rtacoAdjustmentsBatchResponse" doc:id="331cd7c0-a52f-4c19-8ae7-1f7fdc10e52f" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="rtacoAdjustmentsBatchResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "message": "There were no records to send for the adjustments batch."
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="set final response payload" doc:id="599edc00-445a-4709-95d5-ef526244e6ae" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	primaryBatch: vars.rtacoNormalBatchResponse.message default "",
+	adjustmentsBatch: vars.rtacoAdjustmentsBatchResponse.message default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<flow name="impl-process-rustytaco-payroll-flows" doc:id="bae2d900-47bd-4b27-a027-11f4cc55d979" maxConcurrency="1">
+	    <flow-ref doc:name="Start Log" doc:id="8e815e37-dc9f-4666-9d9a-3124fec48fa6" name="sf-start-log"/>
+		<flow-ref doc:name="retrieveRustyTacoPayroll_subFlow" doc:id="276d9348-1623-4a2e-8769-9e0aa2a869f8" name="retrieveRustyTacoPayroll_subFlow" />
+		<set-variable value="RTCOUSA" doc:name="Set Lookup Key Variable" doc:id="45944fb3-7c27-4d5f-8d31-7d5a3246e2de" variableName="lookupKey"/>
+		<flow-ref doc:name="Get Lookup Data" doc:id="6c03329d-86fd-49aa-912a-42260593c09c" name="cache-positions-lookup-data-flow" target="lookupData" targetValue="#[payload]"/>
+		<flow-ref doc:name="getCostCenterInformation_subFlow" doc:id="208fe151-d51c-4351-8fd4-63318dd6e631" name="getCostCenterInformation_subFlow" target="costCenterLookup"/>
+		<logger level="INFO" doc:name="Data Lookup Logger" doc:id="413fbecc-c6f1-4354-84ed-d13e45c4ef34" message="Loaded RustyTaco lookup data" category="${logger.category}"/>
+		<flow-ref doc:name="mapRustyTacoPayrollData_subFlow" doc:id="55b7f844-d78c-47d0-92cd-d1a03a5a9bc9" name="mapRustyTacoPayrollData_subFlow"/>
+		<logger level="INFO" doc:name="Inprogress Logger" doc:id="712d217d-3071-421c-b954-74223e899984" message="Position lookup completed, Posting data to Workday" category="${logger.category}"/>
+		<flow-ref doc:name="sendRustyTacoPayrollDataToWorkday_subFlow" doc:id="db6b55ab-40ec-4050-8b1e-06e9220b4cab" name="sendRustyTacoPayrollDataToWorkday_subFlow" />
+		<flow-ref doc:name="sendRustyTacoPosReconEntries_subFlow" doc:id="02a20c8b-ed53-4c91-8975-efb1005c8c39" target="posReconResponse" name="sendRustyTacoPosReconEntries_subFlow"/>
+		<flow-ref doc:name="End Log" doc:id="4da7dae2-e451-4780-8ce7-f5859a43bb8f" name="sf-end-log"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fc5e35a9-fe00-47bd-bb64-67fddcdd3c56" >
+				<ee:transform doc:name="Transform Message" doc:id="228906bd-cf20-40ea-af9c-1a8c5f774c5b" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	code: error.errorType,
+	message: error.description,
+	transactionId: correlationId
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<flow-ref doc:name="Error Log" doc:id="63946d1d-43b7-42da-a9cb-363517ce998f" name="sf-error-log"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

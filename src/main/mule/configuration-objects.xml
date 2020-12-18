@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:redis="http://www.mulesoft.org/schema/mule/redis" xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:workday="http://www.mulesoft.org/schema/mule/workday"
+	xmlns:crypto="http://www.mulesoft.org/schema/mule/crypto" xmlns:sqs="http://www.mulesoft.org/schema/mule/sqs" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:isb-workday-payroll-system-api="http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api/current/mule-isb-workday-payroll-system-api.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/sqs http://www.mulesoft.org/schema/mule/sqs/current/mule-sqs.xsd
+http://www.mulesoft.org/schema/mule/crypto http://www.mulesoft.org/schema/mule/crypto/current/mule-crypto.xsd
+http://www.mulesoft.org/schema/mule/workday http://www.mulesoft.org/schema/mule/workday/current/mule-workday.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/redis http://www.mulesoft.org/schema/mule/redis/current/mule-redis.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="156d704a-2977-4fa3-8112-dff5d0a8ad81" file="config/${env}-config.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="765f5191-a086-4132-905f-f704afcff734" file="config/${env}-secure-config.yaml" key="${secure.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<http:request-config name="HTTP_Payroll_Lookup_API_Request_Configuration" doc:name="HTTP Request configuration" doc:id="949bff2d-4b53-4004-af6a-4cfa8f9ed637" basePath="${secure::api.payroll.lookup.basePath}" >
+		<http:request-connection protocol="HTTPS" host="${secure::api.payroll.lookup.host}" port="${secure::api.payroll.lookup.port}" >
+			<http:authentication >
+				<http:basic-authentication username="${secure::api.payroll.lookup.auth.username}" password="${secure::api.payroll.lookup.auth.password}" />
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+	<http:request-config name="HTTP_Payroll_POS_SYSTEM_Request_Configuration" doc:name="HTTP Request configuration" doc:id="80ac58ee-0aa5-491f-aded-4745a8cdecf2" responseTimeout="${util.timeout.intervalInMS}">
+		<http:request-connection protocol="HTTPS" host="${secure::source.pos.https.host}" port="${secure::source.pos.https.port}">
+			<http:authentication >
+				<http:basic-authentication username="${secure::source.pos.https.user}" password="${secure::source.pos.https.password}" />
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+	<http:request-config name="HTTP_Payroll_Workday_POST_Request_Configuration" doc:name="HTTP Request configuration" doc:id="102cf556-f95d-4ca1-b207-62ee95393728" >
+		<http:request-connection protocol="HTTPS" host="${secure::target.workday.https.host}" port="${secure::target.workday.https.port}" >
+			<http:authentication >
+				<http:basic-authentication username="${secure::target.workday.https.user}" password="${secure::target.workday.https.password}" />
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+ 	<api-gateway:autodiscovery apiId="${secure::autodiscovery.payroll-system.api-id}" doc:name="API Autodiscovery" doc:id="96ff1737-c6f7-4645-9289-7d04f77f8ffb" flowRef="isb-payroll-process-api-main" />
+	<sqs:config name="Amazon_SQS_Configuration" doc:name="Amazon SQS Configuration" doc:id="b44277e5-a059-4b9e-8800-11cbb73c56ae" >
+		<sqs:basic-connection testQueueArn="${secure::source.pos.sqs.queue_name}" accessKey="${secure::source.pos.sqs.accesskey}" secretKey="${secure::source.pos.sqs.secretkey}" region="${secure::source.pos.sqs.region}" />
+	</sqs:config>
+	<crypto:pgp-config name="NBO_Crypto_Pgp" doc:name="Crypto Pgp" doc:id="75352b5f-719e-4405-a9c1-1caa1a2fcaf8" publicKeyring="security/${secure::source.pos.decryption.pgp.publicKeyFile}" privateKeyring="security/${secure::source.pos.decryption.pgp.privateKeyFile}" >
+		<crypto:pgp-key-infos >
+			<crypto:pgp-asymmetric-key-info keyId="${secure::source.pos.decryption.pgp.keyId}" fingerprint="${secure::source.pos.decryption.pgp.fingerprintId}" passphrase="${secure::source.pos.decryption.pgp.passphrase}" />
+		</crypto:pgp-key-infos>
+	</crypto:pgp-config>
+<!-- 	<sftp:config name="Globalscape_SFTP_Config" doc:name="SFTP Config" doc:id="3cc3d59b-2148-46f5-adae-dca4cea3893f" > -->
+<!-- 		<sftp:connection workingDir="${secure::sftp.directory}" host="${secure::sftp.host}" username="${secure::sftp.user}" password="${secure::sftp.password}" connectionTimeout="${secure::sftp.connectionTimeoutInSeconds}" responseTimeout="${secure::sftp.responseTimeoutInSeconds}" /> -->
+<!-- 	</sftp:config> -->
+	<crypto:pgp-config name="PositionsData_Crypto_Pgp" doc:name="Crypto Pgp" doc:id="87a201c0-d930-4202-abc8-6708c66ff0a5" publicKeyring="security/${secure::workday.positions.decryption.pgp.publicKeyFile}" privateKeyring="security/${secure::workday.positions.decryption.pgp.privateKeyFile}" >
+		<crypto:pgp-key-infos >
+			<crypto:pgp-asymmetric-key-info keyId="${secure::workday.positions.decryption.pgp.keyId}" fingerprint="${secure::workday.positions.decryption.pgp.fingerprintId}" passphrase="${secure::workday.positions.decryption.pgp.passphrase}" />
+		</crypto:pgp-key-infos>
+	</crypto:pgp-config>
+	<workday:config-version-34-config name="Workday_Config_version_34" doc:name="Workday Config version 34" doc:id="ca4b6bde-ee97-446c-85d1-18e87546e77e" >
+		<workday:basic-authentication-api-v34-connection userName="${secure::workday.username}" password="${secure::workday.password}" tenantName="${secure::workday.tenant}" hostName="${secure::workday.hostname}" connectionTimeout="${secure::workday.timeout}" />
+	</workday:config-version-34-config>
+	<http:request-config name="HTTP_Workday_System_API_Request_configuration" doc:name="HTTP Request configuration" doc:id="177ca81f-c919-4d8e-8956-7b17c4475926" basePath="${secure::source.workday.system.api.basepath}" sendCorrelationId="ALWAYS" responseTimeout="${util.timeout.intervalInMS}">
+		<http:request-connection protocol="HTTPS" host="${secure::source.workday.system.api.host}" port="${secure::source.workday.system.api.port}">
+			<http:authentication >
+				<http:basic-authentication username="${secure::source.workday.system.api.basicAuth.user}" password="${secure::source.workday.system.api.basicAuth.password}" />
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+
+<!-- 	<crypto:pgp-config name="Alta_Crypto_Pgp" doc:name="Crypto Pgp" doc:id="4549e1f7-b4b8-4dce-8f08-fba962f2c38b" privateKeyring="security/${secure::source.pos.decryption.pgp1.altaPrivateKeyFile}" publicKeyring="security/${secure::source.pos.decryption.pgp1.altaPublicKeyFile}"> -->
+<!-- 	<crypto:pgp-key-infos > -->
+<!-- 			<crypto:pgp-asymmetric-key-info keyId="${secure::source.pos.decryption.pgp1.keyId}" fingerprint="${secure::source.pos.decryption.pgp1.fingerprintId}" passphrase="${secure::source.pos.decryption.pgp1.passphrase}" /> -->
+<!-- 		</crypto:pgp-key-infos> -->
+<!-- 	</crypto:pgp-config> -->
+	<redis:redis-config name="Redus_Config_Menu" doc:name="Redis Redis" doc:id="4f240687-48ac-4e81-a6ac-92f7f36de6c1" >
+		<redis:clustered-connection clusterHosts="${secure::redis.clusters}" connectionTimeout="${secure::redis.connection.timeout}" maxTotal="${secure::redis.maxTotal}" maxIdle="${secure::redis.maxIdle}" minIdle="${secure::redis.minIdle}" maxWaitMillis="${secure::redis.maxWaitMillis}" minEvictableIdleTimeMillis="${secure::redis.minEvictableIdleTimeMillis}" softMinEvictableIdleTimeMillis="${secure::redis.softMinEvictableIdleTimeMillis}" numTestsPerEvictionRun="${secure::redis.numTestsPerEvictionRun}" timeBetweenEvictionRunsMillis="${secure::redis.timeBetweenEvictionRunsMillis}"/>
+	</redis:redis-config>
+
+</mule>

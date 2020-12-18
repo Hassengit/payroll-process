@@ -1,0 +1,14 @@
+#%RAML 1.0 SecurityScheme
+type: Basic Authentication
+description: Basic Authentication
+describedBy:
+  headers:
+    Authorization:
+      required: true
+      type: string
+      description: Base64-encoded of username and password
+      example: |
+        username:password
+  responses:
+    401:
+      description: Either username or password or both are invalid

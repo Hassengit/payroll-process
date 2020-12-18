@@ -1,0 +1,87 @@
+#%RAML 1.0
+title: isb-payroll-process-api
+description: Payroll process API orchestrates between target system APIs and workday payroll system API to send payroll data
+version: v1
+baseUri: /api/{version}
+
+securitySchemes:
+  oauth_2: !include exchange_modules/600e5e38-240d-4525-afff-7f1b22e93fc4/isb-common-fragments/1.0.6/securitySchemes/oauth2.raml
+
+  basicAuth: !include exchange_modules/600e5e38-240d-4525-afff-7f1b22e93fc4/isb-common-fragments/1.0.6/securitySchemes/basicAuth.raml
+
+traits:
+  pageable: !include exchange_modules/600e5e38-240d-4525-afff-7f1b22e93fc4/isb-common-fragments/1.0.6/traits/pageable.raml
+
+resourceTypes:
+  getType: !include resourceTypes/GET_Type.raml
+
+securedBy: [ basicAuth ]
+/payroll:
+  /nbo:
+    type:
+      getType: 
+        systemName: "NBO"
+    get:
+      queryParameters:
+        source:
+          type: string
+          description: The source of the NBO payroll. Must be one of the support enum values.
+          required: true
+          example: "canada"
+          enum:
+            - canada
+            - weekly
+            - biweekly
+  /rti:
+    type: 
+      getType: 
+        systemName: "RTI"
+  /businesssolver:
+    type: 
+      getType: 
+        systemName: "Business Solver"
+  /rustytaco:
+    type: 
+      getType: 
+        systemName: "Rusty Taco"
+  /sunlife:
+    type: 
+      getType: 
+        systemName: "Sun Life"
+  /matrix:
+    type: 
+      getType: 
+        systemName: "Matrix"
+  /srmax:
+    type: 
+      getType: 
+        systemName: "SR Max"
+
+  /sonic:
+    type:
+      getType:
+        systemName: "Sonic" 
+
+  /position:
+    post:
+      description: Start the positions data run. This will load all the positions data into the application object store. Generally this is used for running a previous weeks payroll. Because of the length of time it takes to load the data to the object store, the loading process is asynchronous from the call. The response will come back as soon as the job starts, and indicates that the job was successfully started, but does not indicate the job was successfully completed.
+      responses:
+        202:
+          body:
+            application/json:
+              type: object
+              properties:
+                message: 
+                  type: string
+                  description: Message returned when the job has started processing.
+                  example: "The positions data run has started successfully."
+        500:
+          body:
+            application/json:
+              type: object
+              properties:
+                message: 
+                  type: string
+                  description: Message returned when the job fails to start.
+                  example: "The positions data run has failed to start, please contact support."
+                

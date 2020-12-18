@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:isb-workday-payroll-system-api="http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api/current/mule-isb-workday-payroll-system-api.xsd">
+	<flow name="impl-process-solver-payroll-flows" doc:id="bae2d900-47bd-4b27-a027-11f4cc55d979" maxConcurrency="1">
+		<flow-ref doc:name="Start Log" doc:id="9173ebbc-ca04-4602-a800-775fa7012b0c" name="sf-start-log"/>
+		<until-successful maxRetries="${util.retries.count}" doc:name="Until Successful" doc:id="5e2b4b4a-394e-47a5-a37d-a86a899f0be6" millisBetweenRetries="${util.retries.delay}">
+			<http:request method="GET" doc:name="GET Payroll Information from BSolver" doc:id="e1fe7b5c-3f41-4898-8587-102b8388057c" config-ref="HTTP_Payroll_POS_SYSTEM_Request_Configuration" responseTimeout="${util.timeout.intervalInMS}" path="${secure::source.pos.https.path}">
+				<http:query-params ><![CDATA[#[output application/java
+---
+{
+	posSystem : vars.processType
+}]]]></http:query-params>
+		</http:request>
+		</until-successful>
+		<ee:transform doc:name="Transform Message" doc:id="ca44d552-eb58-4620-9e26-049d7eaeec01" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="varAddRecords" ><![CDATA[%dw 2.0
+output application/json
+---
+payload filter ($.deductionCode != "ERHSA" and $.recordType == "A")]]></ee:set-variable>
+				<ee:set-variable variableName="varChangeRecords" ><![CDATA[%dw 2.0
+output application/json
+---
+payload filter ($.deductionCode != "ERHSA" and $.recordType != "A")]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="87d3f9cc-6ec9-423e-91cb-bfe85c97980c" batchSize="10000" collection="#[vars.varAddRecords]">
+			<http:request method="POST" doc:name="POST Payroll Data to Workday" doc:id="f430e772-10ba-409e-8021-e857e7812ee6" config-ref="HTTP_Payroll_Workday_POST_Request_Configuration" path="${secure::target.workday.https.path}" outputMimeType="application/json" responseTimeout="${util.timeout.intervalInMS}" target="wsResponse">
+				<http:body ><![CDATA[#[output application/json
+---
+payload]]]></http:body>
+		</http:request>
+			<ee:transform doc:name="Transform Message" doc:id="92117745-2af6-4bdc-b73a-1771935939b9" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="consolidatedResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.consolidatedResponse default [] ++ [vars.wsResponse] default []]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</foreach>
+		<flow-ref doc:name="Process Solver Changes" doc:id="aeab5f35-d22a-4a39-ac77-173409c7dc6c" name="sf-solver-changes-system-flow"/>
+		<ee:transform doc:name="Build Response" doc:id="b943a687-3db0-4fee-a46d-9d3b66c1b9f7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.consolidatedResponse]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="End Log" doc:id="d184ddfb-2f68-48df-8742-b193141da3cf" name="sf-end-log"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fc5e35a9-fe00-47bd-bb64-67fddcdd3c56" >
+				<ee:transform doc:name="Transform Message" doc:id="228906bd-cf20-40ea-af9c-1a8c5f774c5b" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	code: error.errorType,
+	message: error.description,
+	transactionId: correlationId
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<flow-ref doc:name="Error Log" doc:id="515a1d3a-122c-40d5-9193-2d403ee0790b" name="sf-error-log"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

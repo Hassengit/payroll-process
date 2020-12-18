@@ -1,0 +1,148 @@
+#---------- Redis positions Cache ------------
+redis:
+  clusters: "wrkdy-prod.owvobp.clustercfg.use1.cache.amazonaws.com:6379"
+  #clusters: "redis-test.owvobp.clustercfg.use1.cache.amazonaws.com:6379"
+  value.expiry.time: "30000"
+  connection.timeout: "2000"
+  entry.ttl: "30000"
+  retries: "2"
+  retry.frequency: "1000"
+  port: "6379"
+  maxIdle: "12"
+  maxTotal: "24"
+  minIdle: "9"
+  minEvictableIdleTimeMillis: "30000"
+  softMinEvictableIdleTimeMillis: "1"
+  maxWaitMillis: "15000"
+  numTestsPerEvictionRun: "3"
+  testOnBorrow: "true"
+  testOnReturn: "true"
+  testWhileIdle: "false"
+  timeBetweenEvictionRunsMillis: "50000"
+  blockWhenExhausted: "true"
+
+workday:
+  username: "ISU_Mulesoft_API"
+  password: "![2o9EhdL3TaazDIrg0LQrKjstWVD3Q7Vd]"
+  tenant: "inspirebrands"
+  hostname: "wd5-services1.myworkday.com"
+  timeout: "60000"
+  version: "v34.1"
+  integration:
+    reference: "INTEGRATION_SYSTEM__AUDITED_-3-237"
+  positions:
+    eib:
+      filename: 
+        wid: "98abc72008bc4ff0a191ba019bae58aa"
+      processing:
+        retries: "10"
+        frequency: "180000"
+    decryption:
+      pgp:
+        keyId: "DEB61D9C"
+        fingerprintId: "27CDC71FDEB61D9C"
+        passphrase: "![65mbR1y4Wa7+kJnInevXduXq3yX2bblSOoMg08EyddRZwocJlEjeB9MzWTB8Av8cRDajK0fuCsjDDiVpsd28MbxWRojyz19t]"
+        publicKeyFile: "prod_sonic_payroll_pub_key.gpg"
+        privateKeyFile: "prod_sonic_payroll_private_key.gpg"
+
+https:
+  host: "0.0.0.0"
+  port: "8082"
+  enabledProtocols: "TLSv1.2"
+  enabledCipherSuites: "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,TLS_DHE_RSA_WITH_AES_128_CBC_SHA,TLS_DHE_RSA_WITH_AES_256_CBC_SHA,TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,TLS_DHE_RSA_WITH_AES_256_CBC_SHA256"
+
+# API Autodiscovery for validating username and password against the basic Authentication.
+autodiscovery:
+  payroll-system:
+    api-id: "15867188"
+
+tls:
+  storePath: "keystore/keystore_prod.jks"
+  keyPassword: "![K8oHGZiEccOV5phD2zVYjU9vp6M0w6wCvAuR/wYLZDjFNh2PKZYEgg==]"
+  storePassword: "![K8oHGZiEccOV5phD2zVYjU9vp6M0w6wCvAuR/wYLZDjFNh2PKZYEgg==]"
+
+api:
+  payroll:
+    lookup:
+      host: "wd5-services1.myworkday.com"
+      port: "443"
+      basePath: "/ccx/service/customreport2/inspirebrands"
+      positionProfilePath: "/ISU_INT5079/INT5079_-_Payroll_Input_Position_Lookup_Support_-_Minimal"
+      companyProfilePath: "/ISU_INT5079/INT5079_-_IRB_Companies?format=json"
+      jobProfilePath: "/ISU_INT5079/INT5079_-_POS_Job_Profile_Custom_Object_Data"
+      mgmtWorkers: "/ISU_INT5086/INT5086_-_Altametrics_Management_Workers"
+      auth:
+        username: "ISU_Mulesoft_API"
+        password: "![2o9EhdL3TaazDIrg0LQrKjstWVD3Q7Vd]"
+
+
+source:    
+  pos:
+    https:
+      host: "prd-isb-pos-payroll-system-api.us-e1.cloudhub.io"
+      port: "443"
+      path: "api/v1/pos/payroll"
+      user: "payroll_cmn_api"
+      password: "![oiy6bynoqj/kr4f7Bg6zpXD4fdpYMuhUZ+udnTlh5NE=]"
+      recon: 
+        path: "api/v1/pos/payroll/reconciliation"
+      
+    sqs:
+      #queue_url: "https://sqs.us-west-2.amazonaws.com/594352820723/isb_dev_payroll_nbo.fifo"
+      accesskey: "![FPUVBCpKobntIeZvcycd5liJzl8Nyuj1]"
+      secretkey: "![eS1OLS+x/lITnFwZVkNdXSn97az6ZTmrrlKBfdlW2Y+qKyioFzQnjOEHUJI4z+vt]"
+      numberOf_messages: "3000"
+      visibility_timeout: ""
+      queue_name: "isb_prd_payroll_nbo.fifo"
+      alta_queue_name: "isb_prd_payroll_altametrics.fifo"      
+      connection_frequency: ""
+      connectionTimeout: ""
+      connection_maxconnections: ""
+      region: "US_EAST_1"
+      preserveTimeout: "1800"
+      
+    decryption:
+      pgp:
+        publicKeyFile: "prod_sonic_payroll_pub_key.gpg"
+        privateKeyFile: "prod_sonic_payroll_private_key.gpg"
+        keyId: "![HIfbQWyVe6fQtyaBNioc7A==]"
+        fingerprintId: "![qYHaYs8/i/XQ24irK8Ib7cLaKHhae1nN]"
+        passphrase: "![65mbR1y4Wa7+kJnInevXduXq3yX2bblSOoMg08EyddRZwocJlEjeB9MzWTB8Av8cRDajK0fuCsjDDiVpsd28MbxWRojyz19t]"
+        
+  workday:
+    system:
+      api:
+        host: "prd-isb-workday-system-api.us-e1.cloudhub.io"
+        port: "443"
+        basepath: "/api/v1"
+        customLocationPath: "/customlocation"
+        basicAuth:
+          user: "workday_cmn_api"
+          password: "![L5nHKwx8GY+u83FhHaIz6lfVIMoiD9Hk7RSso0+bkEE=]"
+          
+target:
+  workday:
+    https:
+      host: "prd-isb-workday-payroll-system-api.us-e1.cloudhub.io"
+      port: "443"
+      path: "api/v1/payroll"
+      benefitsPath: "api/v1/benefits"
+      protocol: "HTTPS"
+      user: "workday_cmn_api"
+      password: "![L5nHKwx8GY+u83FhHaIz6lfVIMoiD9Hk7RSso0+bkEE=]"
+      
+errorLog:
+  url: "https://prod-isb-error-logging-system-api.us-e1.cloudhub.io/api/v1/ErrorLog"
+  clientId: "ce7ae1c5abcd4428ac36a9cda29ffdb8"
+  clientSecret: "![qMlsk5qdrO8FsfjQRIdFPKV9+BVTdA7WVRTbpH+SRt3t6VR/fUmVKA==]"
+  requestTimeoutInMs: "60000"
+  
+sftp:
+  host: "172.31.254.35"
+  port: "22"
+  user: "InspireMULESOFT"
+  password: "![3H2wIN/K8nH1SQv0+/6JrA==]"
+  directory: ""
+  path: "/payroll/positions/prod/"
+  connectionTimeoutInSeconds: "60"
+  responseTimeoutInSeconds: "60"

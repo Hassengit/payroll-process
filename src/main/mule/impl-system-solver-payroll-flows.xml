@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:workday="http://www.mulesoft.org/schema/mule/workday" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/workday http://www.mulesoft.org/schema/mule/workday/current/mule-workday.xsd">
+	<sub-flow name="sf-solver-changes-system-flow" doc:id="7682bed3-fad2-40de-8ad3-3bfadf28e1ab" >
+		<ee:transform doc:name="Get Distinct Employees" doc:id="3abb9131-533d-43cb-8b89-c73e98033bb5" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="varDistinctEmployees" ><![CDATA[%dw 2.0
+output application/java
+---
+(vars.varChangeRecords distinctBy ($.teamMemberIdentifier)).teamMemberIdentifier]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Solver CR Logger" doc:id="b3eaf967-7ace-4de2-b625-0d32e07aeec7" category="${logger.category}" message='Async processing for solver change records: #[vars.varDistinctEmployees]'/>
+		<async doc:name="Async" doc:id="d009cac5-0462-48ec-b21a-64e27dd26398" >
+			<flow-ref doc:name="Submit data to Workday" doc:id="378a83a7-f052-4f80-9254-3de33f62f8c9" name="sf-post-solver-to-workday-system-flow"/>
+		</async>
+		<ee:transform doc:name="Transform Message" doc:id="9a30f896-089c-4dbc-872e-38d997fc05d5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status": "InProcess",
+	"message": "Solver changes will be sent to Workday Asynchronously"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="sf-post-solver-to-workday-system-flow" doc:id="20a8d938-2327-4872-9435-f175b10e89d9" >
+		<logger level="INFO" doc:name="Solver Async Start" doc:id="00879ca5-c833-450e-b020-e51ca601eba6" message="Started processing solver changes" category="${logger.category}"/>
+		<ee:transform doc:name="processType" doc:id="3e2e253f-61c4-4a4b-ab62-40a034cbea0d" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="processType" ><![CDATA["BusinessSolver_WD"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Start Log" doc:id="f6281d05-dd54-4930-b901-9345bd7889cb" name="sf-start-log"/>
+		<foreach doc:name="For Each" doc:id="05b8f977-6928-4072-a400-98939a93d886" collection="#[vars.varDistinctEmployees default []]">
+			<ee:transform doc:name="Create Workday Request" doc:id="008f0ce6-3b90-4afb-8d11-4fa9c85dd37d" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 urn:com.workday/bsvc
+---
+{
+	ns0#Get_Submit_Payroll_Inputs_Request @(ns0#version:p('secure::workday.version')): {
+		ns0#Request_Criteria: {
+			ns0#Worker_Reference: {
+				ns0#ID @(ns0#"type": "Employee_ID"): payload
+			}
+		},
+		ns0#Response_Group: {
+			ns0#Include_Reference: "1",
+			ns0#Include_Payroll_Input_Data: "1"
+			
+	}
+}
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="currentEmployee" ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<try doc:name="Try" doc:id="cfb10523-c8fa-4186-bc30-80f8f6633b29" >
+				<workday:payroll doc:name="Payroll" doc:id="192cf60a-6d8b-40d3-8adf-0ca76ac6f82a" operation="Get_Submit_Payroll_Inputs" config-ref="Workday_Config_version_34" target="wdayResponse" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="3da13187-3fb9-4fb5-8c4b-b70c48017c8c" >
+						<logger level="WARN" doc:name="Error Logger" doc:id="8aeb4fd3-241e-4564-9ebd-479a12c8b295" category="${logger.category}" message="Error processing employee: #[vars.currentEmployee]"/>
+						<flow-ref doc:name="Error Log" doc:id="4f8283c3-0324-46c1-8a1b-0011bc5e8b01" name="sf-error-log"/>
+					</on-error-continue>
+				</error-handler>
+			</try>
+			<ee:transform doc:name="Append to Solver Changes Request" doc:id="8d117422-d705-4d90-835a-b42f22fce24d" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="varConsolidatedChangesRequest" ><![CDATA[%dw 2.0
+output application/json
+
+fun isNotEmpty(value) = (
+    (not (isEmpty(value)))
+)
+
+var payrollInput = vars.wdayResponse.Get_Submit_Payroll_Inputs_Response.Response_Data.*Payroll_Input
+
+fun getActiveDeductionRef(deductionCode) = (
+payrollInput[?(($.Payroll_Input_Data.Deduction_Reference.*ID[1] == deductionCode) and (isEmpty($.Payroll_Input_Data.End_Date)))]
+)
+
+fun getActiveEarningRef(earningCode) = (
+payrollInput[?(($.Payroll_Input_Data.Earning_Reference.*ID[1] == earningCode) and (isEmpty($.Payroll_Input_Data.End_Date)))]
+)
+
+fun getEarningGoalRef(earningCode) = (
+payrollInput[?(($.Payroll_Input_Data.Earning_Reference.*ID[1] == earningCode))]
+)
+
+fun getAmount(payrollData) = (
+    if (isNotEmpty(payrollData.Payroll_Input_Data.Amount)) payrollData.Payroll_Input_Data.Amount else payrollData.Payroll_Input_Data.Additional_Input_Details_Data.Input_Value
+)
+
+fun getWDStartDate(payrollData) = (
+    payrollData.Payroll_Input_Data.Start_Date
+)
+
+var currEmpl = vars.varChangeRecords filter ($.teamMemberIdentifier == vars.currentEmployee)
+var deductionData = currEmpl filter (isNotEmpty($.deductionCode)) default [] map ((item, index) -> using (wdData = getActiveDeductionRef(item.deductionCode)) [
+	({
+		"batchId" : item.batchId,
+    	"ongoingInput": "0",
+    	"payrollBatchIdentifier" : item.batchId,
+    	"payrollInputIdentifier" : (wdData.Payroll_Input_Data.Payroll_Input_ID)[0],
+    	"recordType": item.recordType,
+    	"startDate": getWDStartDate(wdData)[0],
+    	"endDate": (item.startDate - |P1D|) as String,
+    	"runCategoryID": item.runCategoryID,
+    	"teamMemberIdentifier" : item.teamMemberIdentifier,
+    	"deductionCode" : item.deductionCode,
+    	"amount" : getAmount(wdData)[0]
+	}) if (isNotEmpty(wdData)),
+	(item)
+	
+])
+
+var earningData = currEmpl filter (isNotEmpty($.earningCode) and (not ($.earningCode contains "GOAL"))) default [] map ((item, index) -> using (wdData = getActiveEarningRef(item.earningCode)) [
+	({
+		"batchId" : item.batchId,
+    	"ongoingInput": "0",
+    	"payrollBatchIdentifier" : item.batchId,
+    	"payrollInputIdentifier" : (wdData.Payroll_Input_Data.Payroll_Input_ID)[0],
+    	"recordType": item.recordType,
+    	"startDate": getWDStartDate(wdData)[0],
+    	"endDate": (item.startDate - |P1D|) as String,
+    	"runCategoryID": item.runCategoryID,
+    	"teamMemberIdentifier" : item.teamMemberIdentifier,
+    	"earningCode" : item.earningCode,
+    	"amount" : getAmount(wdData)[0]
+	}) if (isNotEmpty(wdData)),
+	(item)
+	
+])
+
+var earningGoalData = currEmpl filter (isNotEmpty($.earningCode) and ($.earningCode contains "GOAL")) default [] map ((item, index) -> using (wdData = getEarningGoalRef(item.earningCode)) [
+	({
+		"batchId" : item.batchId,
+    	"ongoingInput": "0",
+    	"payrollBatchIdentifier" : item.batchId,
+    	"payrollInputIdentifier" : item.payrollInputIdentifier,
+    	"recordType": item.recordType,
+    	"startDate": item.startDate,
+    	"endDate": item.endDate,
+    	"runCategoryID": item.runCategoryID,
+    	"teamMemberIdentifier" : item.teamMemberIdentifier,
+    	"earningCode" : item.earningCode,
+    	"amount" : (item.amount - sum(getAmount(wdData))) as String
+	}) if (isNotEmpty(wdData))
+	
+])
+---
+vars.varConsolidatedChangesRequest default [] ++ deductionData default [] ++ earningData default [] ++ earningGoalData default []]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</foreach>
+		<logger level="INFO" doc:name="Solver Async End" doc:id="c4f8bdd4-dd01-4485-a449-5948cab490b5" message="Completed creating Workday payroll request: #[flatten(vars.varConsolidatedChangesRequest)]" category="${logger.category}"/>
+		
+		<foreach doc:name="For Each" doc:id="23d23a16-9664-4cbe-90ba-d12dc192c22f" batchSize="10000" collection="#[flatten(vars.varConsolidatedChangesRequest)]">
+			<http:request method="POST" doc:name="POST Payroll Data to Workday" doc:id="b6948098-c325-4069-826f-f69018342867" config-ref="HTTP_Payroll_Workday_POST_Request_Configuration" path="${secure::target.workday.https.path}" outputMimeType="application/json" responseTimeout="${util.timeout.intervalInMS}" target="wsResponse">
+				<http:body ><![CDATA[#[output application/json
+---
+payload]]]></http:body>
+		</http:request>
+			<ee:transform doc:name="Transform Message" doc:id="e53f622e-639c-4ae1-a60a-ac195158839e" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="consolidatedChangesResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.consolidatedChangesResponse default [] ++ [vars.wsResponse] default []]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="3343b972-72c0-44c8-b7c2-b43f2e36b705" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.consolidatedChangesResponse]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="End Log" doc:id="b2a05e27-07b0-4bf7-9405-ad2e9fe2606b" name="sf-end-log"/>
+		
+	</sub-flow>
+</mule>

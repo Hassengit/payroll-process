@@ -1,0 +1,62 @@
+[
+	{
+		"batchId": "RTO_20190831_20190906_20200911131631403",
+		"payrollBatchIdentifier": "RTO_20190831_20190906_20200911131631403",
+		"payrollInputIdentifier": "RTO_100245536_HOURLY_20200911131631403_ROW3",
+		"startDate": "2019-08-31",
+		"endDate": "2019-09-06",
+		"teamMemberIdentifier": "100245536",
+		"positionCode": "",
+		"siteId": "RTO_0661",
+		"jobCode": "11137",
+		"earningCode": "HOURLY",
+		"hours": "6.97",
+		"amount": "",
+		"comments": ""
+	},
+	{
+		"batchId": "RTO_20190831_20190906_20200911131631403",
+		"payrollBatchIdentifier": "RTO_20190831_20190906_20200911131631403",
+		"payrollInputIdentifier": "RTO_100294527_OT_20200911131631403_ROW4",
+		"startDate": "2019-08-31",
+		"endDate": "2019-09-06",
+		"teamMemberIdentifier": "100294527",
+		"positionCode": "",
+		"siteId": "RTO_0677",
+		"jobCode": "12214",
+		"earningCode": "OT",
+		"hours": "1.00",
+		"amount": "",
+		"comments": ""
+	},
+	{
+		"batchId": "RTO_20190831_20190906_20200911131631403",
+		"payrollBatchIdentifier": "RTO_20190831_20190906_20200911131631403",
+		"payrollInputIdentifier": "RTO_100294586_OT_20200911131631403_ROW2",
+		"startDate": "2019-08-31",
+		"endDate": "2019-09-06",
+		"teamMemberIdentifier": "100294586",
+		"positionCode": "",
+		"siteId": "RTO_0696",
+		"jobCode": "22222",
+		"earningCode": "OT",
+		"hours": "0.46",
+		"amount": "",
+		"comments": ""
+	},
+	{
+		"batchId": "RTO_20190831_20190906_20200911131631403",
+		"payrollBatchIdentifier": "RTO_20190831_20190906_20200911131631403",
+		"payrollInputIdentifier": "RTO_100294586_OT_20200911131631403_ROW2",
+		"startDate": "2019-08-31",
+		"endDate": "2019-09-06",
+		"teamMemberIdentifier": "100294586",
+		"positionCode": "",
+		"siteId": "RTO_0677",
+		"jobCode": "22222",
+		"earningCode": "OT",
+		"hours": "1.46",
+		"amount": "",
+		"comments": ""
+	}
+]

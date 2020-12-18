@@ -1,0 +1,40 @@
+#%RAML 1.0 ResourceType
+get:
+  queryParameters:
+    brand:
+      type: string
+      required: false
+  headers:
+    Accept:
+      default: "application/json"
+      required: false
+  description: "Get all payrolls from <<systemName>> system"
+  responses:
+    200:
+      body:
+        application/json:
+          type: object
+          properties:
+            message:
+              type: string
+              required: true
+              description: Message to return when sending success response
+              example: "Successfully published <<systemName>> payroll data to Workday"
+            
+    404:
+      body:
+        application/json:
+          type: object
+          properties:
+            code:
+              type: string
+              required: true
+              example: "1000"
+            message:
+              type: string
+              required: true
+              example: "Validating errors with payroll data from <<systemName>>, please check input data."
+            transactionId:
+              type: string
+              required: true
+              example: "djsf-2342-fdsd-2333-dsfs"

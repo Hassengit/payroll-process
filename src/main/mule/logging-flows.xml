@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	
+	<flow name="sf-send-data-to-log-api" doc:id="d6c8be9d-cbaf-4aa4-ade5-bc216e71f727" >
+		<logger level="DEBUG" doc:name="Log" doc:id="00dcf353-77a6-4ad0-93f8-31620ba4bec8" category="${logger.category}" message="#[vars.logMessage]"/>
+		<async doc:name="Async" doc:id="36199020-d3eb-49b9-89f9-924f2dadc091" >
+			<http:request method="POST" doc:name="LogMessage" doc:id="a2df6e71-02c9-4abf-867c-7e3c4cd53257" url="${secure::errorLog.url}" sendBodyMode="ALWAYS" responseTimeout="${secure::errorLog.requestTimeoutInMs}">
+				<http:body ><![CDATA[#[vars.logMessage]]]></http:body>
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"x_client_secret" : Mule::p('secure::errorLog.clientSecret'),
+	"x_client_id" : Mule::p('secure::errorLog.clientId')
+}]]]></http:headers>
+			</http:request>
+		</async>
+	</flow>
+	<sub-flow name="sf-start-log" doc:id="e275e256-5849-4d06-95c1-612bb7728e31" >
+		<ee:transform doc:name="Transform Message" doc:id="05a466af-d5f5-45fa-b54a-3bdb41897936" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="logMessage" ><![CDATA[%dw 2.0
+output application/json
+var currTime = (now() >> "America/New_York") as String {format: "yyyy-MM-dd'T'HH:mm:ss.SSS"}
+---
+{           
+  "node": Mule::p('logger.node'),
+  "resource": Mule::p('logger.resource'),
+  "type": Mule::p('logger.infoType'), 
+  "ci_type": Mule::p('logger.startCIType'),
+  "metric_name": upper(vars.processType) ++ " Payroll Process",
+  "severity":"5",
+  "message_key": upper(vars.processType) ++ " Payroll Process" ++ "_" ++ (currTime as Date),
+  "description": upper(vars.processType) ++ " - Received Payroll Process API request ",
+  "additional_info": {
+  	correlationId: correlationId
+  },
+  "time_of_event": currTime
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="f8570b14-027b-4ad1-bbb0-41ec98570e9c" name="sf-send-data-to-log-api"/>
+	</sub-flow>
+<sub-flow name="sf-end-log" doc:id="575a0345-ca0c-449f-842f-262d1b42e5e1" >
+		<ee:transform doc:name="Transform Message" doc:id="dd5caabf-948a-42ce-ba70-14d4b35be0e3" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="logMessage" ><![CDATA[%dw 2.0
+output application/json
+var currTime = (now() >> "America/New_York") as String {format: "yyyy-MM-dd'T'HH:mm:ss.SSS"}
+---
+{           
+  "node": Mule::p('logger.node'),
+  "resource": Mule::p('logger.resource'),
+  "type": Mule::p('logger.infoType'), 
+  "ci_type": Mule::p('logger.endCIType'),
+  "metric_name": upper(vars.processType) ++ " Payroll Process",
+  "severity":"5",
+  "message_key": upper(vars.processType) ++ " Payroll Process" ++ "_" ++ (currTime as Date),
+  "description": upper(vars.processType) ++ " - Completed Payroll Process API request ",
+  "additional_info": {
+  	response: payload default null,
+  	correlationId: correlationId
+  	},
+  "time_of_event": currTime
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="621a9150-ac2d-462b-8a07-2928d1414274" name="sf-send-data-to-log-api"/>
+	</sub-flow>
+	
+	<sub-flow name="sf-error-log" doc:id="6e77610b-21c4-44b8-becf-168c9fe2c5cb" >
+		<ee:transform doc:name="Transform Message" doc:id="cd2c256b-432d-47ba-9772-cfafac0590b5" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="logMessage" ><![CDATA[%dw 2.0
+output application/json
+var currTime = (now() >> "America/New_York") as String {format: "yyyy-MM-dd'T'HH:mm:ss.SSS"}
+---
+{           
+  "node": Mule::p('logger.node'),
+  "resource": Mule::p('logger.resource'),
+  "type": Mule::p('logger.errorType'), 
+  "ci_type": Mule::p('logger.endCIType'),
+  "metric_name": upper(vars.processType) ++ " Payroll Process",
+  "severity":"5",
+  "message_key": upper(vars.processType) ++ " Payroll Process" ++ "_" ++ (currTime as Date),
+  "description": upper(vars.processType) ++ " - Error processing Payroll Process API request" ,
+  "additional_info": {
+  	"ErrorLog": error.description,
+  	"ErrorDetails": payload default null,
+  	"correlationId": correlationId
+  },
+  "time_of_event": currTime
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="6622a4ab-9f7b-4848-8890-893fec3d7fc3" name="sf-send-data-to-log-api"/>
+	</sub-flow>
+	<sub-flow name="startLogCostCenterRetrieval_subFlow" doc:id="758d705b-80c8-4f13-b4de-4e23caa00cb4" >
+		<ee:transform doc:name="set logMessage" doc:id="b7120fb1-13e1-48c8-983e-7c09426a2114" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="logMessage" ><![CDATA[%dw 2.0
+output application/json
+var currTime = (now() >> "America/New_York") as String {format: "yyyy-MM-dd'T'HH:mm:ss.SSS"}
+---
+{           
+  "node": Mule::p('logger.node'),
+  "resource": Mule::p('logger.resource'),
+  "type": Mule::p('logger.infoType'), 
+  "ci_type": Mule::p('logger.startCIType'),
+  "metric_name": upper(vars.processType) ++ " Payroll Process",
+  "severity":"5",
+  "message_key": correlationId,
+  "description": "Starting Cost Center HTTP Request to Workday System API",
+  "additional_info": "",
+  "time_of_event": currTime
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="sf-send-data-to-log-api" doc:id="e9492061-3ed3-4633-92a0-1a8c696b3f4d" name="sf-send-data-to-log-api"/>
+	</sub-flow>
+	<sub-flow name="endLogCostCenterRetrieval_subFlow" doc:id="b23a8cde-790f-4ad5-92f4-5db1e33f0348" >
+		<ee:transform doc:name="set logMessage" doc:id="46c2cacf-f024-41d6-92d8-5be9803abe51" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="logMessage" ><![CDATA[%dw 2.0
+output application/json
+var currTime = (now() >> "America/New_York") as String {format: "yyyy-MM-dd'T'HH:mm:ss.SSS"}
+---
+{           
+  "node": Mule::p('logger.node'),
+  "resource": Mule::p('logger.resource'),
+  "type": Mule::p('logger.infoType'), 
+  "ci_type": Mule::p('logger.startCIType'),
+  "metric_name": upper(vars.processType) ++ " Payroll Process",
+  "severity":"5",
+  "message_key": correlationId,
+  "description": "Completed Cost Center HTTP Request to Workday System API",
+  "additional_info": "",
+  "time_of_event": currTime
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="sf-send-data-to-log-api" doc:id="399db666-ae2c-4c6c-8cce-7677e4a7a8fe" name="sf-send-data-to-log-api"/>
+	</sub-flow>
+	
+	</mule>

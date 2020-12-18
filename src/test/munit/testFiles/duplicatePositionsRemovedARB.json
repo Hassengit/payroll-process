@@ -1,0 +1,32 @@
+[
+  {
+    "standardMatch": "1577884ARB_00004640213280",
+    "rtiMatch": "1577884ARB_000044",
+    "positionId": "P-100098273",
+    "standardPrimaryJobMatch": "",
+    "standardPrimaryStoreAndJobMatch": "",
+    "rtiPrimaryJobMatch": "",
+    "rtiPrimaryStoreAndJobMatch": "",
+    "storeCode": "ARB_00004"
+  },
+  {
+    "standardMatch": "1577884ARB_00201640213280",
+    "rtiMatch": "1577884ARB_002014",
+    "positionId": "P1577884",
+    "standardPrimaryJobMatch": "1577884PrimaryJob",
+    "standardPrimaryStoreAndJobMatch": "1577884PrimaryStore640213280",
+    "rtiPrimaryJobMatch": "1577884PrimaryJob",
+    "rtiPrimaryStoreAndJobMatch": "1577884PrimaryStore4",
+    "storeCode": "ARB_00201"
+  },
+  {
+    "standardMatch": "1577884ARB_00201111640213280",
+    "rtiMatch": "1577884ARB_002013",
+    "positionId": "P15577884",
+    "standardPrimaryJobMatch": "",
+    "standardPrimaryStoreAndJobMatch": "1577884PrimaryStore111640213280",
+    "rtiPrimaryJobMatch": "",
+    "rtiPrimaryStoreAndJobMatch": "1577884PrimaryStore3",
+    "storeCode": "ARB_00201"
+  }
+]

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <http:listener-config name="isb-payroll-process-api-httpListenerConfig">
+        <http:listener-connection host="${secure::https.host}" port="${secure::https.port}" protocol="HTTPS">
+            <tls:context enabledProtocols="${secure::https.enabledProtocols}" enabledCipherSuites="${secure::https.enabledCipherSuites}">
+                <tls:key-store type="jks" path="${secure::tls.storePath}" keyPassword="${secure::tls.keyPassword}" password="${secure::tls.storePassword}" />
+            </tls:context>
+        </http:listener-connection>
+    </http:listener-config>
+    <apikit:config name="isb-payroll-process-api-config" api="isb-payroll-process-api.raml" raml="isb-payroll-process-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="isb-payroll-process-api-main">
+        <http:listener config-ref="isb-payroll-process-api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="isb-payroll-process-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="isb-payroll-process-api-console">
+        <http:listener config-ref="isb-payroll-process-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="isb-payroll-process-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="749cd3cc-52e5-4cbe-b5e6-d119f3de74ee">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\payroll\businesssolver:isb-payroll-process-api-config">
+        <ee:transform doc:name="processType" doc:id="0f2d9c77-4292-4da2-8adf-d69fe1661c00">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="processType"><![CDATA["businessolver"]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference" doc:id="6f67e121-5dc3-4b5d-b760-54e61113dfcc" name="impl-process-solver-payroll-flows" />
+        <logger level="INFO" message="#[payload]" category="${logger.category}" />
+    </flow>
+    <flow name="get:\payroll\matrix:isb-payroll-process-api-config">
+        <ee:transform doc:name="processType" doc:id="6f3d0cf8-a649-4d8c-abe4-649e5a456cfe">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="processType"><![CDATA["matrix"]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference" doc:id="c4bc0fd3-732a-4d88-8ef1-56cee52ea148" name="impl-process-matrix-payroll-flows" />
+        <logger level="INFO" message="#[payload]" category="${logger.category}" />
+    </flow>
+    <flow name="get:\payroll\nbo:isb-payroll-process-api-config">
+        <ee:transform doc:name="processType" doc:id="c77c464b-d2a3-4144-9b67-0012f493b179">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="processType"><![CDATA["nbo"]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference" doc:id="5a9481a3-6711-4691-b9e4-71865c750744" name="impl-process-nbo-payroll-flows" />
+        <logger level="INFO" doc:name="Logger" doc:id="77461aa2-21cf-41bd-a2de-d99895c51652" message="#[payload]" category="${logger.category}" />
+    </flow>
+    <flow name="get:\payroll\rti:isb-payroll-process-api-config">
+        <ee:transform doc:name="processType" doc:id="2575724b-7c23-465a-8677-a60138d54cb2">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="processType"><![CDATA["rti"]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference" doc:id="461fd476-c012-47ba-b54c-a5b68b10ee68" name="impl-process-rti-payroll-flows" />
+        <logger level="INFO" message="#[payload]" category="${logger.category}" />
+    </flow>
+    <flow name="get:\payroll\rustytaco:isb-payroll-process-api-config">
+        <ee:transform doc:name="processType" doc:id="c7b71bb5-1887-43e9-b4b9-b5dad9b14c37">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="processType"><![CDATA["rustytaco"]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference" doc:id="496c69e4-a9e6-4d10-bd5b-b1f05bf945d7" name="impl-process-rustytaco-payroll-flows" />
+        <logger level="INFO" message="#[payload]" category="${logger.category}" />
+    </flow>
+    <flow name="get:\payroll\srmax:isb-payroll-process-api-config">
+        <ee:transform doc:name="processType" doc:id="1e6e29bf-3c59-4081-8af9-82646872c5b1">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="processType"><![CDATA["srmax"]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference" doc:id="7d277078-15d2-473e-bad3-6ac39da56522" name="impl-process-srmax-payroll-flows" />
+        <logger level="INFO" message="#[payload]" category="${logger.category}" />
+    </flow>
+    <flow name="get:\payroll\sunlife:isb-payroll-process-api-config">
+        <ee:transform doc:name="processType" doc:id="6212c312-ee2b-4e86-9285-3bbff926b0f5">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="processType"><![CDATA["sunlife"]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference" doc:id="7f2fe13f-aecc-4a49-b99f-7921d3682536" name="impl-process-sunlife-payroll-flows" />
+        <logger level="INFO" message="#[payload]" category="${logger.category}" />
+    </flow>
+    <flow name="get:\payroll\sonic:isb-payroll-process-api-config">
+        <ee:transform doc:name="processType" doc:id="640e4670-1be6-41c2-9fc1-64d4191819b2">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="processType"><![CDATA["sonic"]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference" doc:id="f16c2b39-727f-4f72-9221-d4e40daea34f" name="impl-process-sonic-payroll-flows" />
+        <logger level="INFO" doc:name="Logger" doc:id="28ec9a8c-478b-4336-93b8-c4e9220f7db5" message="#[payload]" category="${logger.category}" />
+    </flow>
+</mule>

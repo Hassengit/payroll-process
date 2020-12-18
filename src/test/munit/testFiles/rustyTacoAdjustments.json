@@ -1,0 +1,49 @@
+[
+	{
+		"batchId": "RTO_20190831_20190906_20200911131631403_Adjustments",
+		"payrollBatchIdentifier": "RTO_20190831_20190906_20200911131631403_Adjustments",
+		"payrollInputIdentifier": "RTO_100294527_OT_20200911131631403_ROW4",
+		"startDate": "2019-08-31",
+		"endDate": "2019-09-06",
+		"teamMemberIdentifier": "100294527",
+		"positionCode": "P100294527",
+		"siteId": "RTO_0677",
+		"jobCode": "12214",
+		"earningCode": "OT",
+		"hours": "1.00",
+		"amount": "",
+		"comments": "",
+		"overrideCostCenter": "32000677"
+	},
+	{
+		"batchId": "RTO_20190831_20190906_20200911131631403_Adjustments",
+		"payrollBatchIdentifier": "RTO_20190831_20190906_20200911131631403_Adjustments",
+		"payrollInputIdentifier": "RTO_100294586_OT_20200911131631403_ROW2",
+		"startDate": "2019-08-31",
+		"endDate": "2019-09-06",
+		"teamMemberIdentifier": "100294586",
+		"positionCode": "P-100002555",
+		"siteId": "RTO_0696",
+		"jobCode": "22222",
+		"earningCode": "OT",
+		"hours": "0.46",
+		"amount": "",
+		"comments": ""
+	},
+	{
+		"batchId": "RTO_20190831_20190906_20200911131631403_Adjustments",
+		"payrollBatchIdentifier": "RTO_20190831_20190906_20200911131631403_Adjustments",
+		"payrollInputIdentifier": "RTO_100294586_OT_20200911131631403_ROW2",
+		"startDate": "2019-08-31",
+		"endDate": "2019-09-06",
+		"teamMemberIdentifier": "100294586",
+		"positionCode": "P-100002555",
+		"siteId": "RTO_0677",
+		"jobCode": "22222",
+		"earningCode": "OT",
+		"hours": "1.46",
+		"amount": "",
+		"comments": "",
+		"overrideCostCenter": "32000677"
+	}
+]

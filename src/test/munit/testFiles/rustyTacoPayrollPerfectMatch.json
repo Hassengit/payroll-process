@@ -1,0 +1,64 @@
+{
+	"perfectMatches": [
+		{
+			"batchId": "RTO_20190831_20190906_20200911131631403",
+			"payrollBatchIdentifier": "RTO_20190831_20190906_20200911131631403",
+			"payrollInputIdentifier": "RTO_100294527_HOURLY_20200911131631403_ROW0",
+			"startDate": "2019-08-31",
+			"endDate": "2019-09-06",
+			"teamMemberIdentifier": "100294527",
+			"positionCode": "P100294527",
+			"siteId": "RTO_0697",
+			"jobCode": "12214",
+			"earningCode": "HOURLY",
+			"hours": "36.34",
+			"amount": "",
+			"comments": ""
+		},
+		{
+			"batchId": "RTO_20190831_20190906_20200911131631403",
+			"payrollBatchIdentifier": "RTO_20190831_20190906_20200911131631403",
+			"payrollInputIdentifier": "RTO_100294524_HOURLY_20200911131631403_ROW1",
+			"startDate": "2019-08-31",
+			"endDate": "2019-09-06",
+			"teamMemberIdentifier": "100294524",
+			"positionCode": "P100294524",
+			"siteId": "RTO_0696",
+			"jobCode": "12214",
+			"earningCode": "HOURLY",
+			"hours": "30.70",
+			"amount": "",
+			"comments": ""
+		},
+		{
+			"batchId": "RTO_20190831_20190906_20200911131631403",
+			"payrollBatchIdentifier": "RTO_20190831_20190906_20200911131631403",
+			"payrollInputIdentifier": "RTO_100294586_HOURLY_20200911131631403_ROW2",
+			"startDate": "2019-08-31",
+			"endDate": "2019-09-06",
+			"teamMemberIdentifier": "100294586",
+			"positionCode": "P-100002555",
+			"siteId": "RTO_0696",
+			"jobCode": "11137",
+			"earningCode": "HOURLY",
+			"hours": "19.96",
+			"amount": "",
+			"comments": ""
+		},
+    	{
+        	"batchId": "RTO_20190831_20190906_20200911131631403",
+        	"payrollBatchIdentifier": "RTO_20190831_20190906_20200911131631403",
+        	"payrollInputIdentifier": "RTO_100294586_OT_20200911131631403_ROW8",
+        	"startDate": "2019-08-31",
+        	"endDate": "2019-09-06",
+        	"teamMemberIdentifier": "100294586",
+        	"positionCode": "",
+        	"siteId": "RTO_0677",
+        	"jobCode": "22222",
+        	"earningCode": "CASSP",
+        	"hours": "",
+        	"amount": "3.88",
+        	"comments": ""
+    	}
+	]
+}

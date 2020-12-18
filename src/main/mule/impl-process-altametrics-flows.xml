@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:crypto="http://www.mulesoft.org/schema/mule/crypto"
+	xmlns:sqs="http://www.mulesoft.org/schema/mule/sqs"
+	xmlns:isb-workday-payroll-system-api="http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api http://www.mulesoft.org/schema/mule/isb-workday-payroll-system-api/current/mule-isb-workday-payroll-system-api.xsd
+http://www.mulesoft.org/schema/mule/sqs http://www.mulesoft.org/schema/mule/sqs/current/mule-sqs.xsd
+http://www.mulesoft.org/schema/mule/crypto http://www.mulesoft.org/schema/mule/crypto/current/mule-crypto.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<json-logger:config name="JSON_Logger_Config" doc:name="JSON Logger Config" doc:id="5301b945-3422-42a9-a0ae-0b28ca0737b1" environment="${env}" />
+	<flow name="impl-process-altametrics-payroll-flows" doc:id="9600ad2c-10f1-48e8-aba5-0a6e49b645ad" maxConcurrency="1">
+		<sqs:receivemessages doc:name="Receivemessages" doc:id="9c2a5b50-9715-44bd-a952-a8449111f5db" config-ref="Amazon_SQS_Configuration" visibilityTimeout="${secure::source.pos.sqs.preserveTimeout}" queueUrl="${secure::source.pos.sqs.alta_queue_name}"/>
+		<json-logger:logger-scope doc:name="Logger scope" doc:id="7cc477e2-12fb-4af2-a168-927ef3e8da95" configurationRef="JSON_Logger_Config" scopeTracePoint="FLOW_LOGIC_SCOPE">
+			<json-logger:logger doc:id="bf3256aa-1a92-4e17-9d96-f7d295552c85" config-ref="JSON_Logger_Config" message="recieved payroll data for altametrics" />
+			<ee:transform doc:name="Transform Message" doc:id="ab236893-4c27-4c0f-8d43-3a291ac63dfe" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="receiptHandle" ><![CDATA[%dw 2.0
+output application/java
+---
+attributes['sqs.message.receipt.handle'] default '']]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<crypto:pgp-decrypt doc:name="Decrypt Payload" doc:id="061cd5c6-297d-4f95-962a-1820ab763ccf" outputMimeType="application/json" config-ref="NBO_Crypto_Pgp" />
+			<flow-ref doc:name="Get Lookup Data" doc:id="7763e9b4-ae35-4271-b928-7cb2888c984b" target="lookupData" name="lookup-Altametrics-data" />
+			<json-logger:logger doc:name="Logger" doc:id="748a2768-ee11-4f49-92ba-98e2735e2e40" config-ref="JSON_Logger_Config" message="getting cost center related data " tracePoint="FLOW" />
+			<flow-ref doc:name="getCostCenterInformation_subFlow" doc:id="4a923d04-00fd-4d96-96ae-aa58ed879c79" name="getCostCenterInformation_subFlow" target="costCenterLookup" />
+			<flow-ref doc:name="mapAltametricsUsaPayroll_subFlow" doc:id="c00d8a54-6ae7-48e2-ae67-90efe38772bd" name="mapAltametricsUsaPayroll_subFlow" />
+			<json-logger:logger doc:name="Logger" doc:id="359cba58-11fd-4693-9758-8a32400425b4" config-ref="JSON_Logger_Config" message="now posting payroll to system api" tracePoint="FLOW">
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: "" 
+}]]]></json-logger:content>
+		</json-logger:logger>
+			<flow-ref doc:name="sendAltametricsUSAPayrollToWorkday_subFlow" doc:id="b19ea923-3e95-4f3a-9c82-f4054a4ac0ea" name="sendAltametricsUSAPayrollToWorkday_subFlow" />
+			<json-logger:logger doc:name="Logger" doc:id="df6b85d5-3720-423b-b334-58683f78282f" config-ref="JSON_Logger_Config" message="payroll process finished successfully " tracePoint="END">
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: ""
+}]]]></json-logger:content>
+		</json-logger:logger>
+		</json-logger:logger-scope>
+	 	<!-- <crypto:pgp-decrypt doc:name="Decrypt Payload" doc:id="c1591092-6d4f-4af0-a116-a366451984aa" outputMimeType="application/json" config-ref="NBO_Crypto_Pgp"/> -->
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="1616cb38-8543-4d6d-ab39-ccbf772b0953">
+<!-- 				<sqs:delete-message doc:name="Delete Error Message" doc:id="defe01cf-1830-4062-ad39-f99967b67a31" config-ref="Amazon_SQS_Configuration" queueUrl="${secure::source.pos.sqs.queue_name}" receiptHandle="#[vars.receiptHandle]" /> -->
+				<ee:transform doc:name="Transform Message" doc:id="6b450d06-9f35-47aa-9a72-39826a21940e">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	code: error.errorType,
+	message: error.description,
+	transactionId: correlationId
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="ERROR" doc:name="Error Logger" doc:id="f9c1c47d-99fe-4a79-83f7-32c8f4ce94b3" message="#[payload]" category="${logger.category}" />
+				<flow-ref doc:name="Error Log" doc:id="23ede03a-431f-4850-9eda-2884a50d91cc" name="sf-error-log" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<sub-flow name="lookup-Altametrics-data" doc:id="65cc4dc4-7727-4f63-a96a-f10823a5cbeb">
+		<ee:transform doc:name="Lookup List" doc:id="21176a31-060a-4832-929d-cc7313d3922d">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+//["BWWUSA", "BWWCAN", "BWIUSA", "RTCOUSA", "IBFOUND", "IRBUSA", "BWWUSA", "ARBUSA"]
+//["BWIUSA", 
+["BWIUSA", "BWWUSA"]]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="varConsolidatedLookupResponse"><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="payrollInfo" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	posSystem: 'altametrics',
+	posSource: 'weekly',
+	payrollStart: payload[0].startDate,
+	payrollEnd: payload[0].endDate
+//	batchId: payload[0].payrollBatchIdentifier
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="5fe2deb1-d639-4d79-b127-435fee308bc9">
+			<json-logger:logger doc:name="Logger" doc:id="d366e1da-a5ca-45f7-bc35-f0a20c130bb9" config-ref="JSON_Logger_Config" message="getting lookup data from redis the score before this is for getting all companies from redis" tracePoint="FLOW">
+				<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: "currently getting " ++ payload ++ " from redis cache, check logger scope for time taken"
+}]]]></json-logger:content>
+			</json-logger:logger>
+			<ee:transform doc:name="Transform Message" doc:id="16605031-7dd4-498f-a843-8331003cf3e6">
+				<ee:message>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="currentCompany"><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+						<ee:set-variable variableName="lookupKey"><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="1700731d-b97f-4393-ae4e-9eb2343bb0ee" message='#["getting lookup data from redis for: " ++ vars.lookupKey]' />
+			<flow-ref doc:name="Get Lookup Data" doc:id="a214193e-a2f6-4a61-9cfa-a1852cbcc804" name="cache-positions-lookup-data-flow" target="lookupData" targetValue="#[payload]" />
+			<ee:transform doc:name="Add to Consolidated Response List" doc:id="c5d20f4a-beeb-4c4f-a3b1-257fea0b8555">
+				<ee:message>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="varConsolidatedLookupResponse"><![CDATA[%dw 2.0
+output application/java
+---
+(vars.varConsolidatedLookupResponse) ++ (vars.lookupData default [])]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<json-logger:logger doc:name="Logger" doc:id="da489564-de73-41ec-9579-b7ac44a9557e" config-ref="JSON_Logger_Config" message="finished getting lookup data from redis for all companies " tracePoint="FLOW">
+					<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: ""
+}]]]></json-logger:content>
+				</json-logger:logger>
+		</foreach>
+		<ee:transform doc:name="Set Response Payload" doc:id="107c02f4-7ff3-4128-8e7e-106716732376">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+flatten(vars.varConsolidatedLookupResponse)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="mapAltametricsUsaPayroll_subFlow" doc:id="c293d22e-884e-486c-bfcd-c39e85ca7cdc" >
+		<json-logger:logger-scope doc:name="Logger scope" doc:id="ee13f812-6e2f-48d2-9331-dd5eb3331f53" configurationRef="JSON_Logger_Config">
+			<ee:transform doc:name="map Altametrics USA Perfect matches" doc:id="88813263-593c-40df-b28a-a624da954ff5">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import * from dw::core::Arrays 
+output application/json 
+
+fun getId(item) = (item.teamMemberIdentifier default "" ++ item.siteId default "" ++ item.jobCode default "") 
+//fun company(obj) = (if (obj.r.company?) (obj.r.company) else (obj.'1'.brand default ''))
+fun generateBatchId(obj) = ((obj.l.brand) ++ '_' ++ ((obj.l.startDate) replace '-' with '') ++ '_' ++ ((obj.l.endDate) replace '-' with '') ++ '_' ++ ((obj.r.payGroup) default "default")) 
+var joinData = leftJoin(payload,vars.lookupData, (l) -> getId(l), (r) -> r.altaMatch)
+ --- 
+ joinData map ((item, index) -> {
+    "batchId": generateBatchId(item),
+     "payrollBatchIdentifier": trim(item.l.payrollBatchIdentifier), 
+     "payrollInputIdentifier": trim(item.l.payrollInputIdentifier), 
+     "startDate": trim(item.l.startDate), 
+     "endDate": trim(item.l.endDate), 
+     "teamMemberIdentifier": trim(item.l.teamMemberIdentifier), 
+     "positionCode": (if (not (isEmpty(trim(item.l.hours)))) item.r.positionId else "") default "", 
+     "siteId": trim(item.l.siteId), 
+     "jobCode": trim(item.l.jobCode), 
+     "earningCode": trim(item.l.earningCode), 
+     "hours": trim(item.l.hours) default "", 
+     "amount": trim(item.l.amount) default "", 
+     "comments": trim(item.l.comments), 
+     "payGroup": trim(item.r.payGroup), 
+     "index": trim(item.l.index)
+ }) filter ( 
+ 			($.hours !="" and $.hours !=null) 
+ 			or 
+ 			($.amount !="" and $.amount !=null) 
+ 		)]]></ee:set-payload> 
+			</ee:message>
+		</ee:transform>
+			<ee:transform doc:name="set overallAltametricsUsaPayroll, payload to perfect match fallouts" doc:id="8e71a0d4-fc4e-442f-b270-1e27d81e5d54">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload default [] filter ((isEmpty($.positionCode)) and (not (isEmpty($.hours))))]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="overallAltametricsUsaPayroll"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	perfectMatches: payload default [] filter (((not (isEmpty($.positionCode))) and (not (isEmpty($.hours)))) or (not (isEmpty($.amount))))
+}]]></ee:set-variable>
+			
+</ee:variables>
+		</ee:transform>
+			<ee:transform doc:name="map Altametrics USA Primary Store and Job Matches" doc:id="808bf81b-7665-4048-a2c1-101ac581128b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+
+fun getId(item) = (
+    item.teamMemberIdentifier default "" ++ "PrimaryStore" ++ item.jobCode default ""
+)
+//fun company(obj) = (if (obj.r.company?) (obj.r.company) else (obj.'1'.brand default ''))
+fun generateBatchId(obj) = (((obj[0].batchId splitBy '_')[0]) ++ '_' ++ ((obj.l.startDate) replace '-' with '') ++ '_' ++ ((obj.l.endDate) replace '-' with '') ++ '_' ++ ((obj.r.payGroup) default "default"))
+var joinData = leftJoin(payload,vars.lookupData, (l) -> getId(l), (r) -> r.standardPrimaryStoreAndJobMatch)
+
+---
+joinData map ((item, index) -> {
+    "batchId": generateBatchId(item),
+    "payrollBatchIdentifier": trim(item.l.payrollBatchIdentifier),
+    "payrollInputIdentifier": trim(item.l.payrollInputIdentifier),
+    "startDate": trim(item.l.startDate),
+    "endDate": trim(item.l.endDate),
+    "teamMemberIdentifier": trim(item.l.teamMemberIdentifier),
+    "positionCode": (if (not (isEmpty(trim(item.l.hours)))) item.r.positionId else "") default "",
+    "siteId": trim(item.l.siteId),
+    "jobCode": trim(item.l.jobCode),
+    "earningCode": trim(item.l.earningCode),
+    "hours": trim(item.l.hours) default "",
+    "amount": trim(item.l.amount) default "",
+    "comments": "",
+     "payGroup": trim(item.r.payGroup), 
+     "index": trim(item.l.index),
+    ("overrideCostCenter": vars.costCenterLookup[?$.storeCode == item.l.siteId].costCenter[0] default "") if ((not (isEmpty(item.r.storeCode))) and item.l.siteId != item.r.storeCode)
+}) filter (
+			($.hours !="" and $.hours !=null)
+			or
+			($.amount !="" and $.amount !=null)
+		)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<ee:transform doc:name="set overallAltametricsUsaPayroll, payload to primary store and job fallouts" doc:id="d27b1651-95d2-4e47-b807-85e995dfc2d9">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload default [] filter (isEmpty($.positionCode))]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="overallAltametricsUsaPayroll"><![CDATA[%dw 2.0
+output application/json
+---
+( vars.overallAltametricsUsaPayroll default {} )
+++
+{
+	primaryStoreMatches: payload default [] filter (not (isEmpty($.positionCode))) map {
+		"batchId": $.batchId ++"_Adjustments",
+    	"payrollBatchIdentifier": $.payrollBatchIdentifier ++"_Adjustments",
+	    "payrollInputIdentifier": $.payrollInputIdentifier,
+    	"startDate": $.startDate,
+	    "endDate": $.endDate,
+    	"teamMemberIdentifier": $.teamMemberIdentifier,
+	    "positionCode": $.positionCode,
+    	"siteId": $.siteId,
+    	"jobCode": $.jobCode,
+ 	   	"earningCode": $.earningCode,
+    	"hours": $.hours,
+	    "amount": $.amount,
+    	"comments": $.comments,
+	    ("overrideCostCenter": $.overrideCostCenter) if (not (isEmpty($.overrideCostCenter))),
+    	"payGroup": $.payGroup,
+    	"index:": $.index
+	}
+}]]></ee:set-variable>
+			
+</ee:variables>
+		</ee:transform>
+			<ee:transform doc:name="map Altametrics USA primary job matches" doc:id="0b6beb80-7c01-4a62-a5e0-9c5d19c823ac">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+
+fun getId(item) = (
+    item.teamMemberIdentifier default "" ++ "PrimaryJob"
+)
+//fun company(obj) = (if (obj.r.company?) (obj.r.company) else (obj.'1'.brand default ''))
+fun generateBatchId(obj) = (((obj[0].batchId splitBy '_')[0]) ++ '_' ++ ((obj.l.startDate) replace '-' with '') ++ '_' ++ ((obj.l.endDate) replace '-' with '') ++ '_' ++ ((obj.r.payGroup) default "default"))
+var joinData = leftJoin(payload,vars.lookupData, (l) -> getId(l), (r) -> r.standardPrimaryJobMatch)
+---
+joinData map ((item, index) -> {
+    "batchId": generateBatchId(item),
+    "payrollBatchIdentifier": trim(item.l.payrollBatchIdentifier),
+    "payrollInputIdentifier": trim(item.l.payrollInputIdentifier),
+    "startDate": trim(item.l.startDate),
+    "endDate": trim(item.l.endDate),
+    "teamMemberIdentifier": trim(item.l.teamMemberIdentifier),
+    "positionCode": (if (not (isEmpty(trim(item.l.hours)))) item.r.positionId else "") default "",
+    "siteId": trim(item.l.siteId),
+    "jobCode": trim(item.l.jobCode),
+    "earningCode": trim(item.l.earningCode),
+    "hours": trim(item.l.hours) default "",
+    "amount": trim(item.l.amount) default "",
+    "comments": trim(item.l.comments),
+    "payGroup": trim(item.r.payGroup),
+    "index": trim(item.l.index),
+   ("overrideCostCenter": vars.costCenterLookup[?$.storeCode == item.l.siteId].costCenter[0] default "") if ((not (isEmpty(item.r.storeCode))) and item.l.siteId != item.r.storeCode),    
+}) filter (
+			($.hours !="" and $.hours !=null)
+			or
+			($.amount !="" and $.amount !=null)
+		)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<ee:transform doc:name="set overallAltametricsUsaPayroll, payload to null" doc:id="927683f7-8be3-4b18-8c0f-757102a05ca0">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+null]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="overallAltametricsUsaPayroll"><![CDATA[%dw 2.0
+output application/json
+---
+( vars.overallAltametricsUsaPayroll default {} )
+++
+{
+	primaryJobMatches: payload default [] filter (not (isEmpty($.positionCode))) map {
+		"batchId": $.batchId ++"_Adjustments",
+    	"payrollBatchIdentifier": $.payrollBatchIdentifier ++"_Adjustments",
+	    "payrollInputIdentifier": $.payrollInputIdentifier,
+    	"startDate": $.startDate,
+	    "endDate": $.endDate,
+    	"teamMemberIdentifier": $.teamMemberIdentifier,
+	    "positionCode": $.positionCode,
+    	"siteId": $.siteId,
+    	"jobCode": $.jobCode,
+ 	   	"earningCode": $.earningCode,
+    	"hours": $.hours,
+	    "amount": $.amount,
+    	"comments": $.comments,
+	    ("overrideCostCenter": $.overrideCostCenter) if (not (isEmpty($.overrideCostCenter))),
+    	"payGroup": $.payGroup,
+    	"index:": $.index
+	},
+	fallouts: payload default [] filter (isEmpty($.positionCode))
+}]]></ee:set-variable>
+				<ee:set-variable variableName="costCenterLookup"><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+				<ee:set-variable variableName="lookupData"><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+			
+</ee:variables>
+		</ee:transform>
+			<ee:transform doc:name="set payload, AltametricsUsaAdjustmentsBatch" doc:id="4c20fed6-2c45-4862-8a8a-3adaab68f358">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+(vars.overallAltametricsUsaPayroll.perfectMatches default []) ++
+(vars.overallAltametricsUsaPayroll.fallouts default [])
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="altametricsUsaAdjustmentsBatch"><![CDATA[%dw 2.0
+output application/json
+---
+(vars.overallAltametricsUsaPayroll.primaryStoreMatches default []) ++
+(vars.overallAltametricsUsaPayroll.primaryJobMatches default [])]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		</json-logger:logger-scope>
+	</sub-flow>
+	<sub-flow name="sendAltametricsUSAPayrollToWorkday_subFlow" doc:id="a0ddcbc2-aaa6-48b9-889b-10c1bf733cc4">
+		<ee:transform doc:name="Transform Message" doc:id="d1405e8e-5dc1-4070-a81c-d725588207d6" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="payrollInfo" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	posSystem: 'altametrics',
+	posSource: 'weekly',
+	payrollStart: (payload[0].startDate) default (vars.altametricsUsaAdjustmentsBatch[0].startDate),
+	payrollEnd: (payload[0].endDate) default (vars.altametricsUsaAdjustmentsBatch[0].endDate),
+	batchId: (payload[0].payrollBatchIdentifier) default (vars.altametricsUsaAdjustmentsBatch[0].payrollBatchIdentifier)
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="97307841-3722-465a-bdfd-c51fe18219d4">
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<flow-ref doc:name="sendPayrollDataToWorkday_subFlow - Altametrics USA Primary Batch" doc:id="16033d16-42aa-4f22-b4d8-d2948318073a" name="sendPayrollDataToWorkday_subFlow" target="altametricsUsaNormalBatchResponse" />
+			</when>
+			<otherwise>
+				<ee:transform doc:name="set AltametricsUsaNormalBatchResponse" doc:id="94450405-2eb1-47e6-8276-6e42f28bc7ca">
+					<ee:message>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="altametricsUsaNormalBatchResponse"><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "message": "There were no records to send for the primary batch."
+}]]></ee:set-variable>
+					
+</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="set payload to AltametricsUsaAdjustmentsbatch" doc:id="27b9c795-24f5-41f8-a783-7cddc2dec9ab">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+vars.altametricsUsaAdjustmentsBatch]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="712a04b1-dfd7-4950-ab3c-8cfa34963a69">
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<flow-ref doc:name="sendPayrollDataToWorkday_subFlow - Altametrics USA Adjustments Batch" doc:id="c049caba-62fa-4624-85ad-90629ce1e036" name="sendPayrollDataToWorkday_subFlow" target="altametricsUsaAdjustmentsBatchResponse" />
+			</when>
+			<otherwise>
+				<ee:transform doc:name="set AltametricsUsaAdjustmentsBatchResponse" doc:id="a74a74a0-b137-45d6-88fe-8124497205df">
+					<ee:message>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="nboUsaAdjustmentsBatchResponse"><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "message": "There were no records to send for the adjustments batch."
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="set final response" doc:id="ddec2848-3bd8-4613-929b-d8d9fa55d35a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	primaryBatch: vars.altametricsUsaNormalBatchResponse.message default "",
+	adjustmentsBatch: vars.altametricsUsaAdjustmentsBatchResponse.message default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="set payload to Altametrics USA Recon Entries" doc:id="5cd54a90-d878-4f4b-a497-f2d1569604a2">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+fun mapPosEntry(payrollEntries, positionMatchType) = payrollEntries map {
+	teamMemberId: $.teamMemberIdentifier,
+	earningCode: $.earningCode,
+	hours: $.hours default "",
+	amount: $.amount default "",
+	jobCode: $.jobCode default "",
+	site: $.siteId default "",
+	positionId: $.positionCode default "",
+	payrollInputId: $.payrollInputIdentifier,
+	payGroup: $.payGroup,
+	positionMatch: positionMatchType,
+	overrideCostCenter: $.overrideCostCenter default "",
+	payrollBatchIdentifier: $.payrollBatchIdentifier,
+	batchId: $.batchId,
+	startDate: $.startDate,
+	endDate: $.endDate,
+	index: $.index
+	}
+---
+{
+  "reconEntries": mapPosEntry(vars.overallAltametricsUsaPayroll.perfectMatches default [], 'Perfect Match') ++
+  				  mapPosEntry(vars.overallAltametricsUsaPayroll.primaryStoreMatches default [], 'Partial Match - Job In Primary Store') ++
+  				  mapPosEntry(vars.overallAltametricsUsaPayroll.primaryJobMatches default [], 'Partial Match - Primary Job') ++
+  				  mapPosEntry(vars.overallAltametricsUsaPayroll.fallouts default [], 'No Match')
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="POST Altametrics USA Recon Entries to POS Payroll System API" doc:id="2356619e-e6be-4ddf-bb01-1db82eec93b5" config-ref="HTTP_Payroll_POS_SYSTEM_Request_Configuration" sendCorrelationId="ALWAYS" path="${secure::source.pos.https.recon.path}">
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	"payrollEnd" : vars.payrollInfo.payrollEnd,
+	"payrollStart" : vars.payrollInfo.payrollStart,
+	"source" : vars.payrollInfo.posSource,
+	"batchId" : vars.payrollInfo.batchId,
+	"posSystem" : vars.payrollInfo.posSystem
+}]]]></http:query-params>
+		</http:request>
+		<json-logger:logger doc:name="Logger" doc:id="2f42380e-a2cd-4d92-b4d5-ae4670796150" config-ref="JSON_Logger_Config" message="final message after calling system api with primary and adjustement batch" tracePoint="END"/>
+	</sub-flow>
+</mule>

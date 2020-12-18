@@ -1,0 +1,32 @@
+[
+  {
+    "standardMatch": "100311038RTO_069712214",
+    "rtiMatch": "100311038RTO_06974",
+    "positionId": "P-100012641",
+    "standardPrimaryJobMatch": "100311038PrimaryJob",
+    "standardPrimaryStoreAndJobMatch": "100311038PrimaryStore12214",
+    "rtiPrimaryJobMatch": "100311038PrimaryJob",
+    "rtiPrimaryStoreAndJobMatch": "100311038PrimaryStore4",
+    "storeCode": "RTO_0697"
+  },
+  {
+    "standardMatch": "100297891RTO_069711138",
+    "rtiMatch": "100297891RTO_06974",
+    "positionId": "P100297891",
+    "standardPrimaryJobMatch": "100297891PrimaryJob",
+    "standardPrimaryStoreAndJobMatch": "100297891PrimaryStore11138",
+    "rtiPrimaryJobMatch": "100297891PrimaryJob",
+    "rtiPrimaryStoreAndJobMatch": "100297891PrimaryStore4",
+    "storeCode": "RTO_0697"
+  },
+  {
+    "standardMatch": "100297891RTO_069711137",
+    "rtiMatch": "100297891RTO_06973",
+    "positionId": "P10029789111137",
+    "standardPrimaryJobMatch": "",
+    "standardPrimaryStoreAndJobMatch": "100297891PrimaryStore11137",
+    "rtiPrimaryJobMatch": "",
+    "rtiPrimaryStoreAndJobMatch": "100297891PrimaryStore3",
+    "storeCode": "RTO_0697"
+  }
+]
